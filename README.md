@@ -1,7 +1,7 @@
 # GenSol - Makefile generator
 GenSol is a tool that can generate makefile automatically.
 
-There is a same tool builded using python [here](https://github.com/neko-para/gensol).
+There is a same tool built using python [here](https://github.com/neko-para/gensol).
 
 ## Dependence
 GenSol uses rapidjson to parse json and boost::filesystem to enum files, so you need to prepare it before compiling.
