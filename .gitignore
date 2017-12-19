@@ -2,6 +2,7 @@
 .build/
 .vscode/
 bin/
+temp/
 
 # Prerequisites
 *.d
@@ -39,5 +40,3 @@ bin/
 # others
 todo
 *.bac
-temp
-temp.cpp
