@@ -1,5 +1,5 @@
-# GenSol - Make make easier
-GenSol is a tool that can configure makefile automatically.
+# GenSol - Makefile generator
+GenSol is a tool that can generate makefile automatically.
 
 ## Dependence
 GenSol uses rapidjson to parse json and boost::filesystem to enum files, so you need to prepare it before compiling.
