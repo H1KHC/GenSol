@@ -3,6 +3,7 @@
 #include <set>
 #include <string>
 #include <rapidjson/document.h>
+#include "error.h"
 
 struct fileNode {
 	int depth;
@@ -15,7 +16,7 @@ struct fileNode {
 
 class Solution {
 	std::set<fileNode> inputFiles;
-	std::string outputFile, currentFile;
+	std::string outputFile, currentFile, defaultTask;
 	void addIncludedFile(const std::string& file, const fileNode* parent);
 	void parseObject(const rapidjson::GenericValue<rapidjson::UTF8<> >& obj, int ID);
 	void analyse(const fileNode* file);
@@ -24,6 +25,11 @@ class Solution {
 	//void autoremove();
 	void generate();
 public:
+	void setDefaultTask(const std::string& str) {
+		if(defaultTask.length())
+			setError(ERR::MULTIPLE_DEFAULT_TASK_SET);
+		defaultTask = str;
+	}
 	void setOutput(const std::string&);
 	void addInput(const std::string&);
 	void execute();

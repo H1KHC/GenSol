@@ -196,6 +196,14 @@ void Task::parse() {
 	if(obj->HasMember("target"))
 		exposeIntoVector((*obj)["target"], target);
 	else target.push_back(module<Target, Targets, &targets>("global"));
+	if(obj->HasMember("default")) {
+		auto& o = (*obj)["default"];
+		if(o.GetType() != js::kTrueType)
+			trace(ATTR(YELLOW) "Ignored illegal key 'default'");
+		else {
+			solution.setDefaultTask(name);
+		}
+	}
 	trace.pop();
 	trace(ATTR(GREEN)	"Done!");
 }

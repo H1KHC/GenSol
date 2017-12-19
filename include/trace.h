@@ -9,6 +9,7 @@
 #define AND			";"
 #define RESET		"0"
 #define BOLD		"1"
+#define DARKER		"2"
 #define UNDERLINE	"4"
 #define BLINK		"5"
 #define REV			"7"

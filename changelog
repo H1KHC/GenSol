@@ -1,0 +1,13 @@
+2017-12-19.02 {
+    * fixed the bug that when two or more targets uses the same sources and
+        diffrent compiler flags, only the first compiler's settings will be
+        applied
+    * fixed the bug that if user doesn't indicate flag in module compiler
+        or linker, the program will crash
+    + added default task option
+}
+
+2017-12-19 {
+    + added changelog
+    * updated onto github
+}

@@ -15,8 +15,10 @@ struct Config : public basicModule {
 		if(!includeCommandGenerated) {
 			includeCommandGenerated = true;
 			includeCommand.clear();
-			for(auto& dir : includeDir)
-				includeCommand.append(" -I"+dir);
+			if(includeDir.size())
+				for(auto& dir : includeDir)
+					includeCommand.append(" -I"+dir);
+			else includeCommand = " ";
 		}
 		return includeCommand;
 	}

@@ -14,13 +14,18 @@ struct Compiler : public basicModule {
 	std::string command(const std::string& src) {
 		if(!compileFlagMerged) {
 			compileFlagMerged = true;
-			compileFlag[0].insert(0, " ");
+			if(compileFlag.size())
+				compileFlag[0].insert(0, " ");
+			else compileFlag.push_back(" ");
 			for(int i = 1, sz = compileFlag.size(); i < sz; ++i)
 				compileFlag[0].append(" " + compileFlag[i]);
 			compileFlag.resize(1);
 			executableName.append(" ");
 		}
 		return executableName + src + compileFlag[0];
+	}
+	std::string objectFileName(const std::string& src) {
+		return src + "." + name + ".o";
 	}
 	Compiler(const Object* obj) : basicModule(obj), compileFlagMerged(false) {}
 };

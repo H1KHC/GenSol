@@ -56,6 +56,7 @@
 		"linker":"debug"
 	}, {
 		"type":"task",
+		"default":true,
 		"name":"release",
 		"target":"gensol"
 	}, {

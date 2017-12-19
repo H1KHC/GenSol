@@ -14,7 +14,8 @@ static char notice[][64] = {
 	"Module name conflict",
 	"Module not found",
 	"Module cyclic dependence found",
-	"Could not analysis file's dependence"
+	"Could not analysis file's dependence",
+	"Multiple default task set"
 };
 static char buf[16384];
 void setError(ERR err, const char *extraInfo, ...) {

@@ -14,7 +14,9 @@ struct Linker : public basicModule {
 	std::string command(const std::string& src, const std::string& out) {
 		if(!linkFlagMerged) {
 			linkFlagMerged = true;
-			linkFlag[0] = " " + linkFlag[0];
+			if(linkFlag.size())
+				linkFlag[0].insert(0, " ");
+			else linkFlag.push_back(" ");
 			for(int i = 1, sz = linkFlag.size(); i < sz; ++i)
 				linkFlag[0].append(" " + linkFlag[i]);
 			linkFlag.resize(1);

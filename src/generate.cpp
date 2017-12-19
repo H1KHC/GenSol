@@ -5,7 +5,7 @@
 #include <boost/filesystem.hpp>
 namespace fs = boost::filesystem;
 
-static std::set<std::string> addedSources, directories;
+static std::set<std::string> directories;
 
 void Solution::generate() {
 	if(!outputFile.length()) outputFile = "makefile";
@@ -16,7 +16,13 @@ void Solution::generate() {
 	out <<".PHONY: directories clean";
 	for(auto &task : tasks)
 		out <<" task_" <<task.second->name.c_str();
-	out <<"\n\nall:\n\t@echo please indicate a task!\n\n# Tasks:\n";
+	out <<"\n\n";
+	if(defaultTask.length()) {
+		out <<"default: task_" <<defaultTask.c_str() <<"\n\n";
+	} else {
+		out <<"default:\n\t@echo please indicate a task!\n\n";
+	}
+	out <<"# Tasks:\n";
 	for(auto &task : tasks)
 		task.second->generate();
 	out <<"# Targets:\n";
@@ -30,13 +36,13 @@ void Solution::generate() {
 	out <<"# Others:\n";
 
 	directories.insert(".build/");
-	out <<"directories:\n\t@mkdir -p";
+	out <<"directories:\n\tmkdir -p";
 	for(auto& dir : directories) {
 		out <<" "<<dir.c_str();
 	}
 	out <<"\n";
 
-	out <<"clean:\n\t@rm -rf";
+	out <<"clean:\n\trm -rf";
 	for(auto &dir : directories)
 		out <<" " <<dir.c_str();
 	out <<'\n';
@@ -80,7 +86,7 @@ void Target::generate() {
 	int pt = out.pt;
 	out <<config.ptr->distDir.c_str() <<name.c_str() <<":";
 	for(auto& src : sources) {
-		std::string&& str = (" .build/" + src) + ".o";
+		std::string&& str = " .build/" + compiler.ptr->objectFileName(src);
 		if(out.pt - pt + str.length() >= 80) {
 			out <<" \\\n";
 			pt = out.pt;
@@ -100,41 +106,38 @@ void Target::generateSources() {
 		ATTR(RESET) "sources for target %s...", name.c_str());
 	trace.push();
 	for(auto& src : sources) {
-		if(!addedSources.count(src)) {
-			addedSources.insert(src);
-			trace(ATTR(GREEN) "Checking "
-				ATTR(RESET) "file %s for dependence...", src.c_str());
-			trace.push();
-			std::string dir = ".build/" +
-							  fs::path(src).remove_filename().string(),
-						binName = ".build/" + src + ".o";
-			directories.insert(dir);
+		trace(ATTR(GREEN) "Generating "
+			ATTR(RESET) "source file %s...", src.c_str());
+		trace.push();
+		std::string dir = ".build/" +
+							fs::path(src).remove_filename().string(),
+					binName = ".build/" + compiler.ptr->objectFileName(src);
+		directories.insert(dir);
 
-			std::string&& cmd = compiler.ptr->command(src) +
-								" -MM " + config.ptr->includeDirCommand();
-			#ifdef _DEBUG
-			trace(ATTR("30") "Command: %s", cmd.c_str());
-			#endif
-			FILE* pp = popen(cmd.c_str(), "r");
-			if(!pp)
-				setError(ERR::SOURCE_DEPENDENCE_ANALYSIS_FAILED);
-			buf[0] = 0;
-			for(int i = 1; i <= 10000000; ++i) {
-				int j = i;
-				i = j;
-			}
-			int size = fread(buf, sizeof(char), 16383, pp);
-			pclose(pp);
-			buf[size - 1] = '\0';	//erase '\n'
-			char *pt = strchr(buf, ':');
-			if(!pt)
-				setError(ERR::SOURCE_DEPENDENCE_ANALYSIS_FAILED);
-			out <<binName.c_str() <<pt <<"\n\t"
-				<<compiler.ptr->command("$<").c_str() <<" -c -o $@"
-				<<config.ptr->includeDirCommand().c_str() <<"\n\n";
-			trace.pop();
-			trace(ATTR(GREEN) "Done!");
+		std::string&& cmd = compiler.ptr->command(src) +
+							" -MM " + config.ptr->includeDirCommand();
+		#ifdef _DEBUG
+		trace(ATTR("30") "Command: %s", cmd.c_str());
+		#endif
+		FILE* pp = popen(cmd.c_str(), "r");
+		if(!pp)
+			setError(ERR::SOURCE_DEPENDENCE_ANALYSIS_FAILED);
+		buf[0] = 0;
+		for(int i = 1; i <= 10000000; ++i) {
+			int j = i;
+			i = j;
 		}
+		int size = fread(buf, sizeof(char), 16383, pp);
+		pclose(pp);
+		buf[size - 1] = '\0';	//erase '\n'
+		char *pt = strchr(buf, ':');
+		if(!pt)
+			setError(ERR::SOURCE_DEPENDENCE_ANALYSIS_FAILED);
+		out <<binName.c_str() <<pt <<"\n\t"
+			<<compiler.ptr->command("$<").c_str() <<" -c -o $@"
+			<<config.ptr->includeDirCommand().c_str() <<"\n\n";
+		trace.pop();
+		trace(ATTR(GREEN) "Done!");
 	}
 	fileGenerated = true;
 	trace.pop();

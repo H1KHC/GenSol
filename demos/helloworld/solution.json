@@ -1,0 +1,21 @@
+[
+    {
+        "type":"config",
+        "distDir":"./",
+        "srcDir":"./"
+    }, {
+        "type":"compiler",
+        "executableName":"g++"
+    }, {
+        "type":"linker",
+        "executableName":"g++",
+        "outputFlag":"-o"
+    }, {
+        "type":"target",
+        "name":"helloworld",
+        "src":"helloworld.cpp"
+    }, {
+        "type":"task",
+        "target":"helloworld"
+    }
+]
