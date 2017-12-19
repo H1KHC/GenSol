@@ -16,7 +16,7 @@ void Solution::generate() {
 	out <<".PHONY: directories clean";
 	for(auto &task : tasks)
 		out <<" task_" <<task.second->name.c_str();
-	out <<"\n\n# Tasks:\n";
+	out <<"\n\nall:\n\t@echo please indicate a task!\n\n# Tasks:\n";
 	for(auto &task : tasks)
 		task.second->generate();
 	out <<"# Targets:\n";
@@ -30,13 +30,13 @@ void Solution::generate() {
 	out <<"# Others:\n";
 
 	directories.insert(".build/");
-	out <<"directories:\n\tmkdir -p";
+	out <<"directories:\n\t@mkdir -p";
 	for(auto& dir : directories) {
 		out <<" "<<dir.c_str();
 	}
 	out <<"\n";
 
-	out <<"clean:\n\trm -rf";
+	out <<"clean:\n\t@rm -rf";
 	for(auto &dir : directories)
 		out <<" " <<dir.c_str();
 	out <<'\n';

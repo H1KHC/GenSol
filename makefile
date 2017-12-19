@@ -1,19 +1,22 @@
-.PHONY: directories clean TASK_debug TASK_release
+.PHONY: directories clean task_debug task_release
+
+all:
+	@echo please indicate a task!
 
 # Tasks:
-TASK_RELEASE: directories bin/GenSol
+task_debug: directories bin/gensold
 
-TASK_DEBUG: directories bin/GenSolD
+task_release: directories bin/gensol
 
 # Targets:
-bin/GenSol: .build/src/access.cpp.o .build/src/debugOutput.cpp.o \
+bin/gensol: .build/src/access.cpp.o .build/src/debugOutput.cpp.o \
  .build/src/error.cpp.o .build/src/generate.cpp.o .build/src/help.cpp.o \
  .build/src/init.cpp.o .build/src/loadAndParse.cpp.o .build/src/main.cpp.o \
  .build/src/matchFiles.cpp.o .build/src/merge.cpp.o .build/src/solution.cpp.o \
  .build/src/variables.cpp.o
 	g++ $^ -lboost_filesystem -lboost_system -std=c++11 -o $@
 
-bin/GenSolD: .build/src/access.cpp.o .build/src/debugOutput.cpp.o \
+bin/gensold: .build/src/access.cpp.o .build/src/debugOutput.cpp.o \
  .build/src/error.cpp.o .build/src/generate.cpp.o .build/src/help.cpp.o \
  .build/src/init.cpp.o .build/src/loadAndParse.cpp.o .build/src/main.cpp.o \
  .build/src/matchFiles.cpp.o .build/src/merge.cpp.o .build/src/solution.cpp.o \
@@ -83,6 +86,6 @@ bin/GenSolD: .build/src/access.cpp.o .build/src/debugOutput.cpp.o \
 
 # Others:
 directories:
-	mkdir -p .build/ .build/src bin/
+	@mkdir -p .build/ .build/src bin/
 clean:
-	rm -rf .build/ .build/src bin/
+	@rm -rf .build/ .build/src bin/

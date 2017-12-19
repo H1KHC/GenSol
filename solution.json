@@ -44,23 +44,23 @@
 		"compileFlag":"-O2"
 	}, {
 		"type":"target",
-		"name":"GenSol",
+		"name":"gensol",
 		"srcR": ".*\\.cpp",
 		"compiler":"release",
 		"linker":"release"
 	}, {
 		"type":"target",
-		"name":"GenSolD",
+		"name":"gensold",
 		"srcR": ".*\\.cpp",
 		"compiler":"debug",
 		"linker":"debug"
 	}, {
 		"type":"task",
 		"name":"release",
-		"target":"GenSol"
+		"target":"gensol"
 	}, {
 		"type":"task",
 		"name":"debug",
-		"target":"GenSolD"
+		"target":"gensold"
 	}
 ]
