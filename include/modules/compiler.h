@@ -1,0 +1,60 @@
+#ifndef __COMPILER_H__
+#define __COMPILER_H__
+#include <map>
+#include <vector>
+#include "modules/basicModule.h"
+
+struct Compiler : public basicModule {
+	bool compileFlagMerged;
+	std::string executableName;
+	std::vector<std::string> compileFlag;
+	void merge(const Compiler*);
+	void access();
+	void parse();
+	std::string command(const std::string& src) {
+		if(!compileFlagMerged) {
+			compileFlagMerged = true;
+			compileFlag[0].insert(0, " ");
+			for(int i = 1, sz = compileFlag.size(); i < sz; ++i)
+				compileFlag[0].append(" " + compileFlag[i]);
+			compileFlag.resize(1);
+			executableName.append(" ");
+		}
+		return executableName + src + compileFlag[0];
+	}
+	Compiler(const Object* obj) : basicModule(obj), compileFlagMerged(false) {}
+};
+
+class Compilers {
+	std::map<std::string, Compiler*> map;
+public:
+	bool exist(const std::string& name) {
+		return map.find(name) != map.end();
+	}
+	Compiler* find(const std::string& name) {
+		try {
+			auto it = map.find(name);
+			if(it == map.end()) throw ERR::MODULE_NOT_FOUND;
+			return it->second;
+		} catch(ERR err) {
+			setError(err);
+		}
+		return nullptr;
+	}
+	void insert(const Object* obj) {
+		try {
+			Compiler *compiler = new Compiler(obj);
+			if(exist(compiler->name))
+				throw ERR::MODULE_NAME_CONFLICT;
+			map[compiler->name] = compiler;
+			trace(ATTR(GREEN) "Found "
+				ATTR(RESET)	"compiler %s",
+				compiler->name.c_str());
+		} catch(ERR err) {
+			setError(err);
+		};
+	}
+};
+
+extern Compilers compilers;
+#endif

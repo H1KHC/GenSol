@@ -1,0 +1,66 @@
+[
+	{
+		"type":"config",
+		"includeDir":[
+			"include"
+		],
+		"distDir":"bin/",
+		"srcDir":"src"
+	}, {
+		"type":"compiler",
+		"executableName":"g++",
+		"compileFlag":[
+			"-std=c++11"
+		]
+	}, {
+		"type":"compiler",
+		"name":"debug",
+		"compileFlag":[
+			"-g",
+			"-D_DEBUG"
+		]
+	}, {
+		"type":"compiler",
+		"name":"release",
+		"compileFlag":[
+			"-O2"
+		]
+	}, {
+		"type":"linker",
+		"executableName":"g++",
+		"linkFlag":[
+			"-std=c++11",
+			"-lboost_system",
+			"-lboost_filesystem"
+		],
+		"outputFlag":"-o"
+	}, {
+		"type":"linker",
+		"name":"debug",
+		"compileFlag":"-g"
+	}, {
+		"type":"linker",
+		"name":"release",
+		"compileFlag":"-O2"
+	}, {
+		"type":"target",
+		"name":"GenSol",
+		"srcR": ".*\\.cpp",
+		"compiler":"release",
+		"linker":"release"
+	}, {
+		"type":"target",
+		"name":"GenSolD",
+		"srcR": ".*\\.cpp",
+		"compiler":"debug",
+		"linker":"debug"
+	}, {
+		"type":"task",
+		"name":"release",
+		"target":"GenSol"
+	}, {
+		"type":"task",
+		"name":"debug",
+		"target":"GenSolD"
+	}
+]
