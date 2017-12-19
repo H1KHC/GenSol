@@ -8,8 +8,7 @@ Solution solution;
 
 void Solution::setOutput(const std::string& file) {
 	static bool set = false;
-	if(set)
-		setError(ERR::MULTIPLE_OUTPUT_FILE_SET);
+	if(set) throw ERR::MULTIPLE_OUTPUT_FILE_SET;
 	set = true;
 	outputFile = file;
 }

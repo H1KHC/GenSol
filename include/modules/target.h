@@ -33,27 +33,19 @@ struct Targets {
 		return map.find(name) != map.end();
 	}
 	Target* find(const std::string& name) {
-		try {
-			auto it = map.find(name);
-			if(it == map.end()) throw ERR::MODULE_NOT_FOUND;
-			return it->second;
-		} catch(ERR err) {
-			setError(err);
-		}
+		auto it = map.find(name);
+		if(it == map.end()) throw ERR::MODULE_NOT_FOUND;
+		return it->second;
 		return nullptr;
 	}
 	void insert(const Object* obj) {
-		try {
-			Target *target = new Target(obj);
-			if(exist(target->name))
-				throw ERR::MODULE_NAME_CONFLICT;
-			map[target->name] = target;
-			trace(ATTR(GREEN) "Found "
-				ATTR(RESET)	"target %s",
-				target->name.c_str());
-		} catch(ERR err) {
-			setError(err);
-		};
+		Target *target = new Target(obj);
+		if(exist(target->name))
+			throw ERR::MODULE_NAME_CONFLICT;
+		map[target->name] = target;
+		trace(ATTR(GREEN) "Found "
+			ATTR(RESET)	"target %s",
+			target->name.c_str());
 	}
 	std::map<std::string, Target*>::iterator begin() { return map.begin(); }
 	std::map<std::string, Target*>::iterator end() { return map.end(); }

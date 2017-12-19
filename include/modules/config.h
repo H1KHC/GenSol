@@ -33,27 +33,18 @@ public:
 		return map.find(name) != map.end();
 	}
 	Config* find(const std::string& name) {
-		try {
-			auto it = map.find(name);
-			if(it == map.end()) throw ERR::MODULE_NOT_FOUND;
-			return it->second;
-		} catch(ERR err) {
-			setError(err);
-		}
-		return nullptr;
+		auto it = map.find(name);
+		if(it == map.end()) throw ERR::MODULE_NOT_FOUND;
+		return it->second;
 	}
 	void insert(const Object* obj) {
-		try {
-			Config *config = new Config(obj);
-			if(exist(config->name))
-				throw ERR::MODULE_NAME_CONFLICT;
-			map[config->name] = config;
-			trace(ATTR(GREEN) "Found "
-				ATTR(RESET)	"config %s",
-				config->name.c_str());
-		} catch(ERR err) {
-			setError(err);
-		};
+		Config *config = new Config(obj);
+		if(exist(config->name))
+			throw ERR::MODULE_NAME_CONFLICT;
+		map[config->name] = config;
+		trace(ATTR(GREEN) "Found "
+			ATTR(RESET)	"config %s",
+			config->name.c_str());
 	}
 };
 

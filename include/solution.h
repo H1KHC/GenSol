@@ -26,8 +26,7 @@ class Solution {
 	void generate();
 public:
 	void setDefaultTask(const std::string& str) {
-		if(defaultTask.length())
-			setError(ERR::MULTIPLE_DEFAULT_TASK_SET);
+		if(defaultTask.length()) throw ERR::MULTIPLE_DEFAULT_TASK_SET;
 		defaultTask = str;
 	}
 	void setOutput(const std::string&);

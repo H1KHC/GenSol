@@ -15,7 +15,7 @@ bin/gensol: .build/src/access.cpp.release.o \
  .build/src/main.cpp.release.o .build/src/matchFiles.cpp.release.o \
  .build/src/merge.cpp.release.o .build/src/solution.cpp.release.o \
  .build/src/variables.cpp.release.o
-	g++ $^ -lboost_filesystem -lboost_system -std=c++11 -o $@
+	g++ $^ -lboost_filesystem -lboost_program_options -lboost_system -std=c++11 -o $@
 
 bin/gensold: .build/src/access.cpp.debug.o .build/src/debugOutput.cpp.debug.o \
  .build/src/error.cpp.debug.o .build/src/generate.cpp.debug.o \
@@ -23,7 +23,7 @@ bin/gensold: .build/src/access.cpp.debug.o .build/src/debugOutput.cpp.debug.o \
  .build/src/loadAndParse.cpp.debug.o .build/src/main.cpp.debug.o \
  .build/src/matchFiles.cpp.debug.o .build/src/merge.cpp.debug.o \
  .build/src/solution.cpp.debug.o .build/src/variables.cpp.debug.o
-	g++ $^ -lboost_filesystem -lboost_system -std=c++11 -o $@
+	g++ $^ -lboost_filesystem -lboost_program_options -lboost_system -std=c++11 -o $@
 
 # Sources:
 .build/src/access.cpp.release.o: src/access.cpp include/modules/task.h \
@@ -149,5 +149,8 @@ bin/gensold: .build/src/access.cpp.debug.o .build/src/debugOutput.cpp.debug.o \
 # Others:
 directories:
 	mkdir -p .build/ .build/src bin/
+
+all: task_debug task_release
+
 clean:
-	rm -rf .build/ .build/src bin/
+	rm -rf .build/ .build/src bin/ bin/gensol bin/gensold

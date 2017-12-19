@@ -24,12 +24,8 @@ void Solution::load() {
 }
 
 void Solution::parseObject(const js::GenericValue<js::UTF8<> >& obj, int ID) {
-	if(obj.GetType() != js::kObjectType)
-		setError(ERR::OBJECT_TYPE_UNSUPPORTED, "in %s.#%d",
-			currentFile.c_str(), ID);
-	if(!obj.HasMember("type"))
-		setError(ERR::MODULE_TYPE_UNDEFINED, "in %s.#%d",
-			currentFile.c_str(), ID);
+	if(obj.GetType() != js::kObjectType) throw ERR::OBJECT_TYPE_UNSUPPORTED;
+	if(!obj.HasMember("type")) throw ERR::MODULE_TYPE_UNDEFINED;
 	const char *type = obj["type"].GetString();
 	if(!strcmp(type, "config"))
 		configs.insert(&obj);
@@ -41,8 +37,7 @@ void Solution::parseObject(const js::GenericValue<js::UTF8<> >& obj, int ID) {
 		targets.insert(&obj);
 	else if(!strcmp(type, "task"))
 		tasks.insert(&obj);
-	else setError(ERR::MODULE_TYPE_UNDEFINED,
-		"in %s.#%d Type: %s", currentFile.c_str(), ID, type);
+	else throw ERR::MODULE_TYPE_UNDEFINED;
 }
 
 void Solution::analyse(const fileNode* file) {
@@ -52,8 +47,7 @@ void Solution::analyse(const fileNode* file) {
 	trace.push();
 	char *buf; long long size;
 	FILE*fp = fopen(file->name.c_str(), "r");
-	if(fp == nullptr)
-		setError(ERR::FILE_OPEN_FAILED);
+	if(fp == nullptr) throw ERR::FILE_OPEN_FAILED;
 	fseeko64(fp, 0, SEEK_END);
 	size = ftello64(fp);
 	fseeko64(fp, 0, SEEK_SET);
@@ -66,11 +60,8 @@ void Solution::analyse(const fileNode* file) {
 		  ATTR(RESET)		"file %s...", currentFile.c_str());
 
 	trace.push();
-	if(document.Parse(buf).HasParseError())
-		setError(ERR::JSON_PARSE_FAILED, "in %s", currentFile.c_str());
-	if(!document.IsArray())
-		setError(ERR::OBJECT_TYPE_UNSUPPORTED, " in %s.document",
-			currentFile.c_str());
+	if(document.Parse(buf).HasParseError()) throw ERR::JSON_PARSE_FAILED;
+	if(!document.IsArray()) throw ERR::OBJECT_TYPE_UNSUPPORTED;
 	for(int i = 0, sz = document.Size(); i < sz; ++i)
 		parseObject(document[i], i);
 	trace.pop();
@@ -89,17 +80,17 @@ inline void exposeIntoVector(const js::GenericValue<js::UTF8<> >& val,
 			for(int i = 0, sz = val.Size(); i < sz; ++i) {
 				auto& f = val[i];
 				if(f.GetType() != js::kStringType)
-					setError(ERR::OBJECT_TYPE_UNSUPPORTED);
+					throw ERR::OBJECT_TYPE_UNSUPPORTED;
 				else vec.push_back(strType(f.GetString()));
 			}; break;
-		default: setError(ERR::OBJECT_TYPE_UNSUPPORTED);
+		default: throw ERR::OBJECT_TYPE_UNSUPPORTED;
 	}
 }
 
 template<class T, class strType>
 inline void getString(const js::GenericValue<T>& val, strType& str) {
 	if(val.GetType() != js::kStringType)
-		setError(ERR::OBJECT_TYPE_UNSUPPORTED);
+		throw ERR::OBJECT_TYPE_UNSUPPORTED;
 	str = val.GetString();
 }
 

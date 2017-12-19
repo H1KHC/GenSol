@@ -17,6 +17,7 @@ void Solution::generate() {
 	for(auto &task : tasks)
 		out <<" task_" <<task.second->name.c_str();
 	out <<"\n\n";
+	if(tasks.map.size() == 1) defaultTask = tasks.map.begin()->first;
 	if(defaultTask.length()) {
 		out <<"default: task_" <<defaultTask.c_str() <<"\n\n";
 	} else {
@@ -36,16 +37,28 @@ void Solution::generate() {
 	out <<"# Others:\n";
 
 	directories.insert(".build/");
+	for(auto it = directories.begin(), _end = directories.end();
+	  it != _end; ++it)
+		while(it != _end && (*it == "./" || *it == ".\\"
+			|| *it == "../" || *it == "..\\"))
+			it = directories.erase(it);
 	out <<"directories:\n\tmkdir -p";
-	for(auto& dir : directories) {
+	for(auto& dir : directories)
 		out <<" "<<dir.c_str();
-	}
-	out <<"\n";
+	out <<"\n\n";
+
+	out <<"all:";
+	for(auto& task : tasks)
+		out <<" task_" <<task.first.c_str();
+	out <<"\n\n";
 
 	out <<"clean:\n\trm -rf";
 	for(auto &dir : directories)
 		out <<" " <<dir.c_str();
-	out <<'\n';
+	for(auto& target : targets)
+		out <<" "<<target.second->config.ptr->distDir.c_str()
+			<<target.first.c_str();
+	out <<"\n";
 
 	trace.pop();
 	trace(ATTR(GREEN) "Done!");
@@ -120,8 +133,7 @@ void Target::generateSources() {
 		trace(ATTR("30") "Command: %s", cmd.c_str());
 		#endif
 		FILE* pp = popen(cmd.c_str(), "r");
-		if(!pp)
-			setError(ERR::SOURCE_DEPENDENCE_ANALYSIS_FAILED);
+		if(!pp) throw ERR::SOURCE_DEPENDENCE_ANALYSIS_FAILED;
 		buf[0] = 0;
 		for(int i = 1; i <= 10000000; ++i) {
 			int j = i;
@@ -131,8 +143,7 @@ void Target::generateSources() {
 		pclose(pp);
 		buf[size - 1] = '\0';	//erase '\n'
 		char *pt = strchr(buf, ':');
-		if(!pt)
-			setError(ERR::SOURCE_DEPENDENCE_ANALYSIS_FAILED);
+		if(!pt) throw ERR::SOURCE_DEPENDENCE_ANALYSIS_FAILED;
 		out <<binName.c_str() <<pt <<"\n\t"
 			<<compiler.ptr->command("$<").c_str() <<" -c -o $@"
 			<<config.ptr->includeDirCommand().c_str() <<"\n\n";
