@@ -11,6 +11,7 @@ struct Linker : public basicModule {
 	void merge(const Linker*);
 	void access();
 	void parse();
+	void loadData(const Object*obj);
 	std::string command(const std::string& src, const std::string& out) {
 		if(!linkFlagMerged) {
 			linkFlagMerged = true;

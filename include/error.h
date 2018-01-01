@@ -17,7 +17,8 @@ enum class ERR {
 
 	SOURCE_DEPENDENCE_ANALYSIS_FAILED,
 
-	MULTIPLE_DEFAULT_TASK_SET
+	MULTIPLE_DEFAULT_TASK_SET,
+	SWITCH_EVALUATE_FAILED
 };
 
 void setError(ERR, const char *extraInfo = "", ...);

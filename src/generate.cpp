@@ -138,10 +138,6 @@ void Target::generateSources() {
 		FILE* pp = popen(cmd.c_str(), "r");
 		if(!pp) throw ERR::SOURCE_DEPENDENCE_ANALYSIS_FAILED;
 		buf[0] = 0;
-		for(int i = 1; i <= 10000000; ++i) {
-			int j = i;
-			i = j;
-		}
 		int size = fread(buf, sizeof(char), 16383, pp);
 		pclose(pp);
 		buf[size - 1] = '\0';	//erase '\n'

@@ -15,7 +15,8 @@ static char notice[][64] = {
 	"Module not found",
 	"Module cyclic dependence found",
 	"Could not analysis file's dependence",
-	"Multiple default task set"
+	"Multiple default task set",
+	"Switch evaluate failed"
 };
 static char buf[16384];
 void setError(ERR err, const char *extraInfo, ...) {
@@ -23,6 +24,7 @@ void setError(ERR err, const char *extraInfo, ...) {
 	va_start(args, extraInfo);
 	vsprintf(buf, extraInfo, args);
 	va_end(args);
+	trace.setMaxTracingDepth(0);
 	trace(ATTR(RED AND BOLD) "Error %d "
 		REATTR(RED)"(%s) %s\n",
 		  (int)err + 1, notice[(int)err],
