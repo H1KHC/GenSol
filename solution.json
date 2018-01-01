@@ -30,9 +30,10 @@
 		"executableName":"g++",
 		"linkFlag":[
 			"-std=c++11",
-			"-lboost_program_options",
-			"-lboost_system",
-			"-lboost_filesystem"
+			"-lboost_program_options-mt",
+			"-lboost_system-mt",
+			"-lboost_filesystem-mt",
+			"-static-libgcc"
 		],
 		"outputFlag":"-o"
 	}, {

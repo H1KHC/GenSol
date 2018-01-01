@@ -20,6 +20,7 @@ void Solution::load() {
 	for(const fileNode& file : inputFiles)
 		analyse(&file);
 	trace.pop();
+	trace(ATTR(GREEN) "Done!" ATTR(RESET));
 }
 
 void Solution::parseObject(const js::GenericValue<js::UTF8<> >& obj, int ID) {

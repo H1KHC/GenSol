@@ -28,6 +28,7 @@ void Solution::check() {
 	for(auto &task : tasks)
 		task.second->access();
 	trace.pop();
+	trace(ATTR(GREEN) "Done!" ATTR(RESET));
 }
 
 void Solution::execute() {

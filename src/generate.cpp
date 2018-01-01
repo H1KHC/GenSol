@@ -2,6 +2,7 @@
 #include "modules/task.h"
 #include "out.h"
 #include <set>
+#include <regex>
 #include <boost/filesystem.hpp>
 namespace fs = boost::filesystem;
 
@@ -10,8 +11,7 @@ static std::set<std::string> directories;
 void Solution::generate() {
 	if(!outputFile.length()) outputFile = "makefile";
 	out.init(outputFile.c_str());
-	trace(ATTR(GREEN)	"\nGenerating "
-		ATTR(RESET) "makefile...");
+	trace(ATTR(GREEN)	"\nGenerating " ATTR(RESET) "makefile...");
 	trace.push();
 	out <<".PHONY: directories clean";
 	for(auto &task : tasks)
@@ -61,6 +61,7 @@ void Solution::generate() {
 	out <<"\n";
 
 	trace.pop();
+	trace(ATTR(GREEN) "Done!" ATTR(RESET));
 }
 
 void Task::generate() {
@@ -109,6 +110,11 @@ void Target::generate() {
 	trace.pop();
 }
 
+void format(char *buf) {
+	static std::regex rgx("(.*\\.o:|\\\\\\n)");
+	std::regex_replace(buf, rgx, "");
+}
+
 void Target::generateSources() {
 	static char buf[16384];
 	if(fileGenerated) return;
@@ -139,6 +145,7 @@ void Target::generateSources() {
 		int size = fread(buf, sizeof(char), 16383, pp);
 		pclose(pp);
 		buf[size - 1] = '\0';	//erase '\n'
+		format(buf);
 		char *pt = strchr(buf, ':');
 		if(!pt) throw ERR::SOURCE_DEPENDENCE_ANALYSIS_FAILED;
 		out <<binName.c_str() <<pt <<"\n\t"
