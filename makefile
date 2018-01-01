@@ -58,7 +58,8 @@ bin/gensold: .build/src/access.cpp.debug.o .build/src/debugOutput.cpp.debug.o \
  include/error.h
 	g++ $< -O2 -std=c++11 -c -o $@ -Iinclude/
 
-.build/src/main.cpp.release.o: src/main.cpp include/error.h include/solution.h include/error.h
+.build/src/main.cpp.release.o: src/main.cpp include/trace.h include/error.h include/solution.h \
+ include/error.h
 	g++ $< -O2 -std=c++11 -c -o $@ -Iinclude/
 
 .build/src/matchFiles.cpp.release.o: src/matchFiles.cpp include/modules/task.h \
@@ -118,7 +119,8 @@ bin/gensold: .build/src/access.cpp.debug.o .build/src/debugOutput.cpp.debug.o \
  include/error.h
 	g++ $< -D_DEBUG -g -std=c++11 -c -o $@ -Iinclude/
 
-.build/src/main.cpp.debug.o: src/main.cpp include/error.h include/solution.h include/error.h
+.build/src/main.cpp.debug.o: src/main.cpp include/trace.h include/error.h include/solution.h \
+ include/error.h
 	g++ $< -D_DEBUG -g -std=c++11 -c -o $@ -Iinclude/
 
 .build/src/matchFiles.cpp.debug.o: src/matchFiles.cpp include/modules/task.h \

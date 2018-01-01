@@ -49,7 +49,6 @@ void Target::matchFiles() {
 	}
 
 	trace.pop();
-	trace(ATTR(GREEN) "Done!");
 	trace(ATTR(GREEN) "Searching "
 		  ATTR(RESET) "for files matching target %s...", name.c_str());
 	trace.push();
@@ -71,14 +70,11 @@ void Target::matchFiles() {
 				}
 			}
 			trace.pop();
-			trace(ATTR(GREEN) "Done!");
 		}
 		trace.pop();
-		trace(ATTR(GREEN) "Done!");
 	}
 	sourcesR.clear();
 	deduplicate(sources);
 	trace.pop();
-	trace(ATTR(GREEN) "Done!");
 	fileMatched = true;
 }

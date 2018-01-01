@@ -1,18 +1,18 @@
 #include <boost/program_options.hpp>
-#include <boost/filesystem.hpp>
-#include <iostream>
+//#include <boost/filesystem.hpp>
 #include <vector>
 #include <string>
 #include <cstdio>
+#include "trace.h"
 #include "error.h"
 #include "solution.h"
-namespace fs = boost::filesystem;
 namespace po = boost::program_options;
 
 int main(int argc, char **argv) {
 	try {
 		po::options_description general("");
 		general.add_options()
+			("depth,d", po::value<int>()->default_value(2), "Max tracing depth")
 			("help,h", "Show this message and exit")
 			("output,o", po::value<std::string>()->default_value("makefile"), 
 						"Output file name");
@@ -31,10 +31,10 @@ int main(int argc, char **argv) {
 		po::notify(vm);
 
 		if (vm.count("help")) {
-			std::cout <<"\033[32mUsage:\033[0m "
-				<<fs::path(argv[0]).filename().string()
-				<<" [options] [input] ...\n"
-				<< general << "\n";
+			puts("Usage: gensol [options] [input] ...\n"
+				"  -d [ --depth  ] arg (=2)        Max tracing depth\n"
+				"  -h [ --help   ]                 Show this message and exit\n"
+				"  -o [ --output ] arg (=makefile) Output file name");
 			return 0;
 		}
 
@@ -43,9 +43,10 @@ int main(int argc, char **argv) {
 				solution.addInput(f);
 		} else solution.addInput("solution.json");
 		solution.setOutput(vm["output"].as<std::string>().c_str());
+		trace.setMaxTracingDepth(vm["depth"].as<int>());
 		solution.execute();
 	} catch (const po::error &ex) {
-		std::cout <<ex.what() <<std::endl;
+		puts(ex.what());
 	} catch  (const ERR &err) {
 		setError(err);
 	}

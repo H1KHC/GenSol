@@ -33,7 +33,7 @@ class Trace {
 	char buf[16384];
 	const int tabWidthExp;
 	std::string spaces;
-	int depth, maxDepth;
+	int depth, maxDepth, maxTracing;
 	void checkMaxDepth() {
 		(maxDepth >= depth) ? 0 :
 		(spaces.append(std::string((depth - maxDepth) << tabWidthExp, ' ')),
@@ -43,7 +43,9 @@ public:
 	Trace() : tabWidthExp(1), depth(0), maxDepth(0) {}
 	void push() { ++depth; checkMaxDepth(); }
 	void pop() { --depth; }
+	void setMaxTracingDepth(int dep) { maxTracing = dep; }
 	void operator() (const char *fmt, ...) {
+		if(depth >= maxTracing) return;
 		buf[0] = 0;
 		if(fmt[0]) {
 			va_list args;

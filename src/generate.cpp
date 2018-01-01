@@ -61,7 +61,6 @@ void Solution::generate() {
 	out <<"\n";
 
 	trace.pop();
-	trace(ATTR(GREEN) "Done!");
 }
 
 void Task::generate() {
@@ -85,7 +84,6 @@ void Task::generate() {
 	out <<"\n\n";
 	generated = true;
 	trace.pop();
-	trace(ATTR(GREEN) "Done!");
 }
 
 void Target::generate() {
@@ -109,7 +107,6 @@ void Target::generate() {
 	out <<"\n\t" <<linker.ptr->command("$^", "$@").c_str() <<"\n\n";
 	generated = true;
 	trace.pop();
-	trace(ATTR(GREEN) "Done!");
 }
 
 void Target::generateSources() {
@@ -148,9 +145,7 @@ void Target::generateSources() {
 			<<compiler.ptr->command("$<").c_str() <<" -c -o $@"
 			<<config.ptr->includeDirCommand().c_str() <<"\n\n";
 		trace.pop();
-		trace(ATTR(GREEN) "Done!");
 	}
 	fileGenerated = true;
 	trace.pop();
-	trace(ATTR(GREEN) "Done!");
 }

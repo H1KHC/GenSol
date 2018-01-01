@@ -20,7 +20,6 @@ void Solution::load() {
 	for(const fileNode& file : inputFiles)
 		analyse(&file);
 	trace.pop();
-	trace(ATTR(GREEN) "Done!");
 }
 
 void Solution::parseObject(const js::GenericValue<js::UTF8<> >& obj, int ID) {
@@ -55,7 +54,6 @@ void Solution::analyse(const fileNode* file) {
 	size = fread(buf, sizeof(char), size, fp);
 	fclose(fp);
 	trace.pop();
-	trace(ATTR(GREEN)		"Done!");
 	trace(ATTR(GREEN)		"Analysing "
 		  ATTR(RESET)		"file %s...", currentFile.c_str());
 
@@ -65,7 +63,6 @@ void Solution::analyse(const fileNode* file) {
 	for(int i = 0, sz = document.Size(); i < sz; ++i)
 		parseObject(document[i], i);
 	trace.pop();
-	trace(ATTR(GREEN)		"Done!");
 	delete[] buf;
 }
 
@@ -110,7 +107,6 @@ void Config::parse() {
 	if(obj->HasMember("srcDir"))
 		exposeIntoVector((*obj)["srcDir"], srcDir);
 	trace.pop();
-	trace(ATTR(GREEN)	"Done!");
 }
 
 void Compiler::parse() {
@@ -127,7 +123,6 @@ void Compiler::parse() {
 	if(obj->HasMember("compileFlag"))
 		exposeIntoVector((*obj)["compileFlag"], compileFlag);
 	trace.pop();
-	trace(ATTR(GREEN)	"Done!");
 }
 
 void Linker::parse() {
@@ -146,7 +141,6 @@ void Linker::parse() {
 	if(obj->HasMember("linkFlag"))
 		exposeIntoVector((*obj)["linkFlag"], linkFlag);
 	trace.pop();
-	trace(ATTR(GREEN)	"Done!");
 }
 
 void Target::parse() {
@@ -172,7 +166,6 @@ void Target::parse() {
 		getString((*obj)["linker"], linker);
 	else linker = "global";
 	trace.pop();
-	trace(ATTR(GREEN)	"Done!");
 }
 
 void Task::parse() {
@@ -196,5 +189,4 @@ void Task::parse() {
 		}
 	}
 	trace.pop();
-	trace(ATTR(GREEN)	"Done!");
 }

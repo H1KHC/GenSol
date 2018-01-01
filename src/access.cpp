@@ -35,12 +35,10 @@ void Compiler::access() {
 		ances->access();
 		merge(ances);
 		trace.pop();
-		trace(ATTR(GREEN) "Done!");
 	}
 	base.clear();
 	deduplicate(compileFlag);
 	trace.pop();
-	trace(ATTR(GREEN) "Done!");
 	accessed = 2;
 }
 
@@ -61,7 +59,6 @@ void Config::access() {
 		ances->access();
 		merge(ances);
 		trace.pop();
-		trace(ATTR(GREEN) "Done!");
 	}
 	base.clear();
 	deduplicate(includeDir);
@@ -73,7 +70,6 @@ void Config::access() {
 	deduplicate(srcDir);
 	checkArraySuffixSlash(srcDir);
 	trace.pop();
-	trace(ATTR(GREEN) "Done!");
 	accessed = 2;
 }
 
@@ -94,12 +90,10 @@ void Linker::access() {
 		ances->access();
 		merge(ances);
 		trace.pop();
-		trace(ATTR(GREEN) "Done!");
 	}
 	base.clear();
 	deduplicate(linkFlag);
 	trace.pop();
-	trace(ATTR(GREEN) "Done!");
 	accessed = 2;
 }
 
@@ -126,7 +120,6 @@ void Target::access() {
 		if(!tasks.exist(*it)) base.erase(it);
 	
 	trace.pop();
-	trace(ATTR(GREEN) "Done!");
 	accessed = 2;
 }
 
@@ -149,6 +142,5 @@ void Task::access() {
 	  it != _end; ++it)
 		if(!tasks.exist(*it)) base.erase(it);
 	trace.pop();
-	trace(ATTR(GREEN) "Done!");
 	accessed = 2;
 }
