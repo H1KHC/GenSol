@@ -50,7 +50,7 @@ public:
 			throw ERR::MODULE_NAME_CONFLICT("Name: [compiler] %s",
 				compiler->name.c_str());
 		map[compiler->name] = compiler;
-		trace(ATTR(GREEN) "Found "
+		trace.log(ATTR(GREEN) "Found "
 			ATTR(RESET)	"compiler %s",
 			compiler->name.c_str());
 	}

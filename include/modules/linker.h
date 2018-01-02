@@ -48,7 +48,7 @@ public:
 			throw ERR::MODULE_NAME_CONFLICT("Name: [linker] %s",
 				linker->name.c_str());
 		map[linker->name] = linker;
-		trace(ATTR(GREEN) "Found "
+		trace.log(ATTR(GREEN) "Found "
 			ATTR(RESET)	"linker %s",
 			linker->name.c_str());
 	}

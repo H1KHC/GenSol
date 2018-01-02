@@ -42,9 +42,10 @@ public:
 	void insert(const Object* obj) {
 		Config *config = new Config(obj);
 		if(exist(config->name))
-			throw ERR::MODULE_NAME_CONFLICT("Name: [config] %s", config->name);
+			throw ERR::MODULE_NAME_CONFLICT("Name: [config] %s",
+				config->name.c_str());
 		map[config->name] = config;
-		trace(ATTR(GREEN) "Found "
+		trace.log(ATTR(GREEN) "Found "
 			ATTR(RESET)	"config %s",
 			config->name.c_str());
 	}

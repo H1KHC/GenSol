@@ -46,7 +46,7 @@ struct Targets {
 			throw ERR::MODULE_NAME_CONFLICT("Name: [target] %s",
 				target->name.c_str());
 		map[target->name] = target;
-		trace(ATTR(GREEN) "Found "
+		trace.log(ATTR(GREEN) "Found "
 			ATTR(RESET)	"target %s",
 			target->name.c_str());
 	}

@@ -30,7 +30,7 @@ struct Tasks {
 			throw ERR::MODULE_NAME_CONFLICT("Name: [task] %s",
 				task->name.c_str());
 		map[task->name] = task;
-		trace(ATTR(GREEN) "Found "
+		trace.log(ATTR(GREEN) "Found "
 			ATTR(RESET)	"task %s",
 			task->name.c_str());
 	}

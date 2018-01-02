@@ -17,55 +17,55 @@ void Target::matchFiles() {
 	bool flag = false;
 	toRemove.clear();
 	if(fileMatched) return;
-	trace(ATTR(GREEN) "Checking "
-		  ATTR(RESET) "target %s for files' existence...", name.c_str());
-	trace.push();
+	trace.push("Target " + name,
+		ATTR(GREEN) "Checking "
+		ATTR(RESET) "target %s for files' existence...", name.c_str());
 	for(auto file = sources.begin(),
 			_end = sources.end();
 			file != _end; ++file) {
-		trace(ATTR(GREEN) "Checking "
-			  ATTR(RESET) "for file %s...", file->c_str());
+		trace.log(ATTR(GREEN) "Checking "
+				  ATTR(RESET) "for file %s...", file->c_str());
 		flag = false;
 		for(auto& dir: config.ptr->srcDir) {
 			auto path = fs::current_path() / fs::path(dir);
-			trace(ATTR(GREEN) "Searching "
-				  ATTR(RESET) "in directory %s...",path.string().c_str());
+			trace.log(ATTR(GREEN) "Searching "
+					  ATTR(RESET) "in directory %s...",path.string().c_str());
 			if(fs::exists(path / *file)) {
-				trace(ATTR(GREEN) "Found!");
+				trace.log(ATTR(GREEN) "Found!");
 				flag = true;
 				break;
 			}
 		}
 		if(!flag) {
 			toRemove.push_back(file);
-			trace(ATTR(YELLOW)"Not found!");
+			trace.log(ATTR(YELLOW)"Not found!");
 		}
 	}
 	for(auto it = toRemove.rbegin(), _rend = toRemove.rend();
 		it != _rend; ++it) {
-			trace(ATTR(YELLOW)"Removed "
-				  ATTR(RESET) "nonexistent file %s", (*it)->c_str());
+			trace.log(ATTR(YELLOW)"Removed "
+					  ATTR(RESET) "nonexistent file %s", (*it)->c_str());
 			sources.erase(*it);
 	}
 
 	trace.pop();
-	trace(ATTR(GREEN) "Searching "
+	trace.push("Target " + name,
+		  ATTR(GREEN) "Searching "
 		  ATTR(RESET) "for files matching target %s...", name.c_str());
-	trace.push();
 	for(auto& file : sourcesR) {
-		trace(ATTR(GREEN) "Matching "
-			  ATTR(RESET) "file regex %s...", file.c_str());
-		trace.push();
+		trace.push("Regex " + file,
+			ATTR(GREEN) "Matching "
+			ATTR(RESET) "file regex %s...", file.c_str());
 		for(auto& dir: config.ptr->srcDir) {
 			std::regex R(file);
-			trace(ATTR(GREEN) "Searching "
+			trace.push("Directory " + dir,
+				ATTR(GREEN) "Searching "
 				ATTR(RESET) "in directory %s...",dir.c_str());
-			trace.push();
 			for(auto&f : fs::recursive_directory_iterator(dir)) {
 				auto& fn = f.path().string();
 				if(std::regex_match(fn, R)) {
-					trace(ATTR(GREEN) "Matched "
-						  ATTR(RESET) "%s", fn.c_str());
+					trace.log(ATTR(GREEN) "Matched "
+							  ATTR(RESET) "%s", fn.c_str());
 					sources.push_back(fn);
 				}
 			}

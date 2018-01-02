@@ -50,7 +50,12 @@ int main(int argc, char **argv) {
 		solution.setOutput(vm["output"].as<std::string>().c_str());
 		trace.setMaxTracingDepth(vm["depth"].as<int>());
 		solution.execute();
-	} catch (const exception &ex) {
+	} catch (const ERR::ERR &ex) {
+		puts(ex.what());
+		while(!trace.stack.empty())
+			printf("At %s\n", trace.stack.top().c_str()),
+			trace.pop();
+	} catch (const std::exception &ex) {
 		puts(ex.what());
 	}
 	return 0;

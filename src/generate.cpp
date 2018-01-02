@@ -11,8 +11,8 @@ static std::set<std::string> directories;
 void Solution::generate() {
 	if(!outputFile.length()) outputFile = "makefile";
 	out.init(outputFile.c_str());
-	trace(ATTR(GREEN)	"\nGenerating " ATTR(RESET) "makefile...");
-	trace.push();
+	trace.push("Solution generate",
+		ATTR(GREEN) "\nGenerating " ATTR(RESET) "makefile...");
 	out <<".PHONY: directories clean";
 	for(auto &task : tasks)
 		out <<" task_" <<task.second->name.c_str();
@@ -61,14 +61,14 @@ void Solution::generate() {
 	out <<"\n";
 
 	trace.pop();
-	trace(ATTR(GREEN) "Done!" ATTR(RESET));
+	trace.log(ATTR(GREEN) "Done!" ATTR(RESET));
 }
 
 void Task::generate() {
 	if(generated) return;
-	trace(ATTR(GREEN) "Generating "
-		  ATTR(RESET) "task %s...", name.c_str());
-	trace.push();
+	trace.push("Task " + name,
+		ATTR(GREEN) "Generating "
+		ATTR(RESET) "task %s...", name.c_str());
 	int pt = out.pt;
 	out <<"task_" <<name.c_str() <<": directories";
 	for(auto& n : base) {
@@ -91,9 +91,9 @@ void Target::generate() {
 	if(generated) return;
 	directories.insert(config.ptr->distDir +
 					   fs::path(name).remove_filename().string());
-	trace(ATTR(GREEN) "Generating "
-		  ATTR(RESET) "target %s...", name.c_str());
-	trace.push();
+	trace.push("Target " + name,
+		ATTR(GREEN) "Generating "
+		ATTR(RESET) "target %s...", name.c_str());
 	matchFiles();
 	int pt = out.pt;
 	out <<config.ptr->distDir.c_str() <<name.c_str() <<":";
@@ -111,20 +111,22 @@ void Target::generate() {
 }
 
 void format(char *buf) {
-	static std::regex rgx("(.*\\.o:|\\\\\\n)");
-	std::regex_replace(buf, rgx, "");
+	std::string str(buf);
+	static std::regex rgx(R"((.*\.o|\\\n ))");
+	str = std::regex_replace(str, rgx, "", std::regex_constants::match_any);
+	strcpy(buf, str.c_str());
 }
 
 void Target::generateSources() {
 	static char buf[16384];
 	if(fileGenerated) return;
-	trace(ATTR(GREEN) "Generating "
+	trace.push("Sources of " + name,
+		ATTR(GREEN) "Generating "
 		ATTR(RESET) "sources for target %s...", name.c_str());
-	trace.push();
 	for(auto& src : sources) {
-		trace(ATTR(GREEN) "Generating "
+		trace.push("Source file " + src,
+			ATTR(GREEN) "Generating "
 			ATTR(RESET) "source file %s...", src.c_str());
-		trace.push();
 		std::string dir = ".build/" +
 							fs::path(src).remove_filename().string(),
 					binName = ".build/" + compiler.ptr->objectFileName(src);
@@ -133,18 +135,16 @@ void Target::generateSources() {
 		std::string&& cmd = compiler.ptr->command(src) +
 							" -MM " + config.ptr->includeDirCommand();
 		#ifdef _DEBUG
-		trace(ATTR("30") "Command: %s", cmd.c_str());
+		trace.log(ATTR("30") "Command: %s", cmd.c_str());
 		#endif
 		FILE* pp = popen(cmd.c_str(), "r");
 		if(!pp)
-			throw ERR::SOURCE_DEPENDENCE_ANALYSIS_FAILED("Name: [target] %s",
-				name.c_str());
+			throw ERR::SOURCE_DEPENDENCE_ANALYSIS_FAILED();
 		buf[0] = 0;
 		int size = fread(buf, sizeof(char), 16383, pp);
 		pclose(pp);
 		if(!size)
-			throw ERR::SOURCE_DEPENDENCE_ANALYSIS_FAILED("Name: [target] %s",
-				name.c_str());
+			throw ERR::SOURCE_DEPENDENCE_ANALYSIS_FAILED();
 		buf[size - 1] = '\0';	//erase '\n'
 		format(buf);
 		out <<binName.c_str() <<buf <<"\n\t"

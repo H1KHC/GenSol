@@ -8,7 +8,7 @@ Solution solution;
 
 void Solution::setOutput(const std::string& file) {
 	static bool set = false;
-	if(set) throw ERR::MULTIPLE_OUTPUT_FILE_SET;
+	if(set) throw ERR::MULTIPLE_OUTPUT_FILE_SET();
 	set = true;
 	outputFile = file;
 }
@@ -22,13 +22,13 @@ void Solution::addInput(const std::string& file) {
 }
 
 void Solution::check() {
-	trace(ATTR(GREEN)	"\nChecking "
+	trace.push("Solution check",
+		ATTR(GREEN)"\nChecking "
 		ATTR(RESET) "tasks...");
-	trace.push();
 	for(auto &task : tasks)
 		task.second->access();
 	trace.pop();
-	trace(ATTR(GREEN) "Done!" ATTR(RESET));
+	trace.log(ATTR(GREEN) "Done!" ATTR(RESET));
 }
 
 void Solution::execute() {

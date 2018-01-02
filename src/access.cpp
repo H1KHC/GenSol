@@ -23,18 +23,16 @@ void Compiler::access() {
 	else if(accessed == 1) throw ERR::MODULE_CYCLIC_DEPENDENCE_FOUND();
 	accessed = 1;
 	parse();
-	trace(ATTR(GREEN) "Checking "
-		  ATTR(RESET) "compiler %s...", name.c_str());
-	trace.push();
+	trace.push("Compiler "+name,
+		ATTR(GREEN) "Checking "
+		ATTR(RESET) "compiler %s...", name.c_str());
 	parse();
+	trace.log(ATTR(GREEN) "Checking "
+			ATTR(RESET) "its base compiler...");
 	for(auto& b : base) {
-		trace(ATTR(GREEN) "Checking "
-			  ATTR(RESET) "its base compiler...");
-		trace.push();
 		Compiler *ances = compilers.find(b);
 		ances->access();
 		merge(ances);
-		trace.pop();
 	}
 	base.clear();
 	deduplicate(compileFlag);
@@ -47,18 +45,16 @@ void Config::access() {
 	else if(accessed == 1) throw ERR::MODULE_CYCLIC_DEPENDENCE_FOUND();
 	accessed = 1;
 	parse();
-	trace(ATTR(GREEN) "Checking "
-		  ATTR(RESET) "config %s...", name.c_str());
-	trace.push();
+	trace.push("Config " + name,
+		ATTR(GREEN) "Checking "
+		ATTR(RESET) "config %s...", name.c_str());
 	parse();
+	trace.log(ATTR(GREEN) "Checking "
+			ATTR(RESET) "its base config...");
 	for(auto& b : base) {
-		trace(ATTR(GREEN) "Checking "
-		  ATTR(RESET) "its base config...");
-		trace.push();
 		Config *ances = configs.find(b);
 		ances->access();
 		merge(ances);
-		trace.pop();
 	}
 	base.clear();
 	deduplicate(includeDir);
@@ -78,18 +74,16 @@ void Linker::access() {
 	else if(accessed == 1) throw ERR::MODULE_CYCLIC_DEPENDENCE_FOUND();
 	accessed = 1;
 	parse();
-	trace(ATTR(GREEN) "Checking "
-		  ATTR(RESET) "linker %s...", name.c_str());
-	trace.push();
+	trace.push("Linker " + name,
+		ATTR(GREEN) "Checking "
+		ATTR(RESET) "linker %s...", name.c_str());
 	parse();
+	trace.log(ATTR(GREEN) "Checking "
+		ATTR(RESET) "its base linker...");
 	for(auto& b : base) {
-		trace(ATTR(GREEN) "Checking "
-		  ATTR(RESET) "its base linker...");
-		trace.push();
 		Linker *ances = linkers.find(b);
 		ances->access();
 		merge(ances);
-		trace.pop();
 	}
 	base.clear();
 	deduplicate(linkFlag);
@@ -102,9 +96,9 @@ void Target::access() {
 	else if(accessed == 1) throw ERR::MODULE_CYCLIC_DEPENDENCE_FOUND();
 	accessed = 1;
 	parse();
-	trace(ATTR(GREEN) "Checking "
-		  ATTR(RESET) "target %s...", name.c_str());
-	trace.push();
+	trace.push("Target " + name,
+		ATTR(GREEN) "Checking "
+		ATTR(RESET) "target %s...", name.c_str());
 	parse();
 
 	config.access();
@@ -128,9 +122,9 @@ void Task::access() {
 	else if(accessed == 1)
 		throw ERR::MODULE_CYCLIC_DEPENDENCE_FOUND();
 	accessed = 1;
-	trace(ATTR(GREEN) "Checking "
+	trace.push("Task " + name,
+		ATTR(GREEN) "Checking "
 		ATTR(RESET) "task %s...", name.c_str());
-	trace.push();
 	parse();
 
 	// dependency relationship handled in makefile

@@ -3,6 +3,8 @@
 #include <string>
 #include <cstdarg>
 #include <cstdio>
+#include <string>
+#include <stack>
 
 #define ATTR(attr)	"\033[" attr "m"
 #define REATTR(attr) "\033[0m" ATTR(attr)
@@ -33,40 +35,46 @@ class Trace {
 	char buf[16384];
 	const int tabWidthExp;
 	std::string spaces;
+	std::stack<std::string> stack;
 	int depth, maxDepth, maxTracing;
 	void checkMaxDepth() {
 		(maxDepth >= depth) ? 0 :
 		(spaces.append(std::string((depth - maxDepth) << tabWidthExp, ' ')),
 			maxDepth = depth);
 	}
+	void output(int dep, const char *fmt, va_list args) {
+		buf[0] = 0;
+		vsprintf(buf, fmt, args);
+		fprintf(stderr, "%s%s\n" ATTR(RESET),
+			spaces.c_str() + ((maxDepth - dep) << tabWidthExp), buf);
+	}
+	friend int main(int, char **);
 public:
 	Trace() : tabWidthExp(1), depth(0), maxDepth(0) {}
-	void push() { ++depth; checkMaxDepth(); }
-	void pop() { --depth; }
-	void setMaxTracingDepth(int dep) { maxTracing = (dep == 0 ? 0x7FFFFFFF : dep); }
-	void forceOutput(const char *fmt, ...) {
-		if(depth >= maxTracing) depth = maxTracing;
-		buf[0] = 0;
-		if(fmt[0]) {
+	void push(std::string pos, const char *fmt = "", ...) {
+		if(depth < maxTracing && fmt[0]) {
 			va_list args;
 			va_start(args, fmt);
-			vsprintf(buf, fmt, args);
+			output(depth, fmt, args);
 			va_end(args);
 		}
-		fprintf(stderr, "%s%s\n" ATTR(RESET),
-			spaces.c_str() + ((maxDepth - depth) << tabWidthExp), buf);
+		++depth; checkMaxDepth();
+		stack.push(pos);
 	}
-	void operator() (const char *fmt, ...) {
+	void pop() { --depth; stack.pop(); }
+	void setMaxTracingDepth(int dep) { maxTracing = (dep == 0 ? 0x7FFFFFFF : dep); }
+	void log(const char *fmt, ...) {
 		if(depth >= maxTracing) return;
-		buf[0] = 0;
-		if(fmt[0]) {
-			va_list args;
-			va_start(args, fmt);
-			vsprintf(buf, fmt, args);
-			va_end(args);
-		}
-		fprintf(stderr, "%s%s\n" ATTR(RESET),
-			spaces.c_str() + ((maxDepth - depth) << tabWidthExp), buf);
+		va_list args;
+		va_start(args, fmt);
+		output(depth, fmt, args);
+		va_end(args);
+	}
+	void forceOutput (const char *fmt, ...) {
+		va_list args;
+		va_start(args, fmt);
+		output((depth >= maxTracing) ? maxTracing : depth, fmt, args);
+		va_end(args);
 	}
 };
 

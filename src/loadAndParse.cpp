@@ -11,48 +11,50 @@ js::Document document;
 
 void printObject(const js::GenericValue<js::UTF8<> >& obj);
 
+inline bool matchString(const char *str1, const char *str2) {
+	while(*str1 && *str2)
+		if(tolower(*(str1++)) != tolower(*(str2++))) return false;
+	return *str1 == *str2;
+}
+
 void Solution::load() {
 	if(!inputFiles.size())
 		addInput("solution.json");
-	trace(ATTR(GREEN)	"Loading "
+	trace.push("Solution load",
+		ATTR(GREEN) "Loading "
 		ATTR(RESET) "files...");
-	trace.push();
 	for(const fileNode& file : inputFiles)
 		analyse(&file);
 	trace.pop();
-	trace(ATTR(GREEN) "Done!" ATTR(RESET));
+	trace.log(ATTR(GREEN) "Done!" ATTR(RESET));
 }
 
 void Solution::parseObject(const js::GenericValue<js::UTF8<> >& obj, int ID) {
 	if(obj.GetType() != js::kObjectType)
-		throw ERR::OBJECT_TYPE_UNSUPPORTED(
-			"In document.#%d, expected Object", ID
-		);
-	if(!obj.HasMember("type")) throw ERR::MODULE_TYPE_UNDEFINED;
+		throw ERR::OBJECT_TYPE_UNSUPPORTED();
+	if(!obj.HasMember("type")) throw ERR::MODULE_TYPE_UNDEFINED();
 	const char *type = obj["type"].GetString();
-	if(!strcmp(type, "config"))
+	if(matchString(type, "config"))
 		configs.insert(&obj);
-	else if(!strcmp(type, "compiler"))
+	else if(matchString(type, "compiler"))
 		compilers.insert(&obj);
-	else if(!strcmp(type, "linker"))
+	else if(matchString(type, "linker"))
 		linkers.insert(&obj);
-	else if(!strcmp(type, "target"))
+	else if(matchString(type, "target"))
 		targets.insert(&obj);
-	else if(!strcmp(type, "task"))
+	else if(matchString(type, "task"))
 		tasks.insert(&obj);
-	else throw ERR::MODULE_TYPE_UNDEFINED(
-		"In document.#%d, got Object", ID
-	);
+	else throw ERR::MODULE_TYPE_UNDEFINED("type: %d", type);
 }
 
 void Solution::analyse(const fileNode* file) {
 	currentFile = file->name;
-	trace(ATTR(GREEN) 	"Opening "
-		ATTR(RESET)		"file %s...", currentFile.c_str());
-	trace.push();
+	trace.push("File " + currentFile,
+		ATTR(GREEN) "Opening "
+		ATTR(RESET) "file %s...", currentFile.c_str());
 	char *buf; long long size;
 	FILE*fp = fopen(file->name.c_str(), "r");
-	if(fp == nullptr) throw ERR::FILE_OPEN_FAILED;
+	if(fp == nullptr) throw ERR::FILE_OPEN_FAILED();
 	fseeko64(fp, 0, SEEK_END);
 	size = ftello64(fp);
 	fseeko64(fp, 0, SEEK_SET);
@@ -60,14 +62,24 @@ void Solution::analyse(const fileNode* file) {
 	size = fread(buf, sizeof(char), size, fp);
 	fclose(fp);
 	trace.pop();
-	trace(ATTR(GREEN)		"Analysing "
-		  ATTR(RESET)		"file %s...", currentFile.c_str());
 
-	trace.push();
-	if(document.Parse(buf).HasParseError()) throw ERR::JSON_PARSE_FAILED;
-	if(!document.IsArray()) throw ERR::OBJECT_TYPE_UNSUPPORTED;
-	for(int i = 0, sz = document.Size(); i < sz; ++i)
+	trace.push("File " + currentFile,
+		ATTR(GREEN) "Analysing "
+		ATTR(RESET) "file %s...", currentFile.c_str());
+	if(document.Parse(buf).HasParseError())
+		throw ERR::JSON_PARSE_FAILED(
+			"Error code: %d", document.GetParseError()
+		);
+	if(!document.IsArray())
+		throw ERR::OBJECT_TYPE_UNSUPPORTED(
+			"expected array"
+		);
+	for(int i = 0, sz = document.Size(); i < sz; ++i) {
+		sprintf(buf, "document.#%d", i);
+		trace.push(buf);
 		parseObject(document[i], i);
+		trace.pop();
+	}
 	trace.pop();
 	delete[] buf;
 }
@@ -83,41 +95,30 @@ inline void exposeStringArrayIntoVector(const js::GenericValue<js::UTF8<> >& val
 			for(int i = 0, sz = val.Size(); i < sz; ++i) {
 				auto& f = val[i];
 				if(f.GetType() != js::kStringType)
-					throw ERR::OBJECT_TYPE_UNSUPPORTED;
+					throw ERR::OBJECT_TYPE_UNSUPPORTED("Expected String");
 				else vec.push_back(strType(f.GetString()));
 			}; break;
-		default: throw ERR::OBJECT_TYPE_UNSUPPORTED;
+		default: throw ERR::OBJECT_TYPE_UNSUPPORTED("Expected String or Array");
 	}
 }
 
 template<class T, class strType>
 inline void getString(const js::GenericValue<T>& val, strType& str) {
 	if(val.GetType() != js::kStringType)
-		throw ERR::OBJECT_TYPE_UNSUPPORTED;
+		throw ERR::OBJECT_TYPE_UNSUPPORTED("Expected String");
 	str = val.GetString();
 }
 
-inline bool stringMatchIgnoreAlphaCase(const char *str1, const char *str2) {
-	while(*str1 && *str2)
-		if(tolower(*(str1++)) != tolower(*(str2++))) return false;
-	return *str1 == *str2;
-}
-
-template <class ModuleType>
-void pushSwitcher(ModuleType *module, const Object *obj) {
-	trace(ATTR(GREEN) "Found" ATTR(RESET) " a switcher");
-	trace.push();
-	if(!obj->HasMember("expression") || !obj->HasMember("case"))
-		throw ERR::OBJECT_TYPE_UNSUPPORTED;
-	auto &e = (*obj)["expression"], &c = (*obj)["case"];
-	if(e.GetType() != js::kStringType ||
-		c.GetType() != js::kArrayType ||
-		!c.Size())
-		throw ERR::OBJECT_TYPE_UNSUPPORTED;
+void evaluateExpression(const Object *obj, char *value) {
+	if(!obj->HasMember("expression"))
+		throw ERR::OBJECT_INVALID("Missing \"expression\"");
+	auto &e = (*obj)["expression"];
+	if(e.GetType() != js::kStringType)
+		throw ERR::OBJECT_TYPE_UNSUPPORTED("Expected String or Array");
 
 	const char *tempstr = e.GetString();
-	int explen = strlen(tempstr), size = c.Size(), valuelen;
-	char *expression = new char[explen + 14], *value = new char[16384];
+	int explen = strlen(tempstr), valuelen;
+	char *expression = new char[explen + 14];
 	strcpy(expression, tempstr);
 	strcat(expression, " 2>"
 		#ifdef _WIN32
@@ -128,50 +129,83 @@ void pushSwitcher(ModuleType *module, const Object *obj) {
 	);
 	FILE *pp = popen(expression, "r");
 	if(!pp)
-		throw ERR::SWITCH_EVALUATE_FAILED;
+		throw ERR::SWITCHER_EXPRESSION_EVALUATE_FAILED(expression);
 	valuelen = fread(value, sizeof(char), 16383, pp);
 	if(valuelen == 0)
-		throw ERR::SWITCH_EVALUATE_FAILED;
+		throw ERR::SWITCHER_EXPRESSION_EVALUATE_FAILED(expression);
 	pclose(pp);
-#ifdef _DEBUG
-	trace(ATTR("30") "Expression : %s", value);
-#endif
-	int defaultTarget = -1, switchTarget = -1;
-	for(int i = 0; i < size; ++i)
-		if(c[i].GetType() == js::kObjectType) {
-			auto& o = c[i];
-			if(o.HasMember("default")) {
-				if(defaultTarget != -1) //multiple default label
-					throw ERR::OBJECT_TYPE_UNSUPPORTED;
-				defaultTarget = i;
-			} else if(o.HasMember("name")) {
-				auto &n = o["name"];
-				if(n.GetType() != js::kStringType)
-					throw ERR::OBJECT_TYPE_UNSUPPORTED;
-				if(stringMatchIgnoreAlphaCase(n.GetString(), value)) {
-					if(switchTarget != -1) //multiple matched label
-						throw ERR::OBJECT_TYPE_UNSUPPORTED;
-					switchTarget = i;
-				}
-			}
-		} else throw ERR::OBJECT_TYPE_UNSUPPORTED;
-	if(switchTarget == -1) {
-		if(defaultTarget == -1)
-			trace(ATTR(YELLOW) "Warning: no matched label!");
-		else {
-			trace(ATTR(GREEN) "Matched "
-				  ATTR(RESET) "default label");
-			module->loadData(&c[defaultTarget]);
-		}
-	} else {
-		trace(ATTR(GREEN) "Matched "
-			ATTR(RESET) "label #%d", switchTarget);
-		module->loadData(&c[switchTarget]);
-	}
-	//switch
-	//default check
 	delete expression;
-	delete value;
+}
+
+template <class ModuleType>
+void pushSwitcher(ModuleType *module, const Object *obj) {
+	char *expr = new char[16384];
+	trace.push("Switcher",
+		ATTR(GREEN) "Found"
+		ATTR(RESET) " a switcher");
+		trace.push("Expression",
+			ATTR(GREEN) "Evaluating"
+			ATTR(RESET) " expression");
+		evaluateExpression(obj, expr);
+		trace.pop();
+#ifdef _DEBUG
+		trace.log(ATTR("30") "Expression evaluated: %s", expr);
+#endif
+		trace.push("Case labels",
+			ATTR(GREEN) "Matching"
+			ATTR(RESET) " labels");
+		if(!obj->HasMember("case"))
+			throw ERR::OBJECT_INVALID("Missing \"case\"");
+		auto &c = (*obj)["case"];
+		if(c.GetType() != js::kArrayType)
+			throw ERR::OBJECT_TYPE_UNSUPPORTED(
+				"Expect Array"
+			);
+		if(!c.Size())
+			throw ERR::OBJECT_INVALID("Empty case labels");
+		int defaultTarget = -1, switchTarget = -1, size = c.Size();
+		for(int i = 0; i < size; ++i) {
+			char buf[32];
+			sprintf(buf, "Case label #%d", i);
+			trace.push(buf);
+			if(c[i].GetType() == js::kObjectType) {
+				auto& o = c[i];
+				if(o.HasMember("default")) {
+					if(defaultTarget != -1)
+						throw ERR::SWITCHER_MULTIPLE_DEFAULT_LABEL();
+					defaultTarget = i;
+				} else if(o.HasMember("name")) {
+					auto &n = o["name"];
+					if(n.GetType() != js::kStringType)
+						throw ERR::OBJECT_TYPE_UNSUPPORTED(
+							"Expected String"
+						);
+					if(matchString(n.GetString(), expr)) {
+						if(switchTarget != -1) //multiple matched label
+							throw ERR::SWITCHER_MULTIPLE_MATCHED_LABEL();
+						switchTarget = i;
+					}
+				}
+			} else throw ERR::OBJECT_TYPE_UNSUPPORTED(
+				"Expeted Object"
+			);
+			trace.pop();
+		}
+		if(switchTarget == -1) {
+			if(defaultTarget == -1)
+				throw ERR::SWITCHER_MATCH_FAILED();
+			else {
+				trace.log(ATTR(GREEN) "Matched "
+						ATTR(RESET) "default label");
+				module->loadData(&c[defaultTarget]);
+			}
+		} else {
+			trace.log(ATTR(GREEN) "Matched "
+					ATTR(RESET) "label #%d", switchTarget);
+			module->loadData(&c[switchTarget]);
+		}
+		delete expr;
+		trace.pop();
 	trace.pop();
 }
 
@@ -186,7 +220,9 @@ void checkSwitcher(ModuleType *module, ObjectType *object) {
 					pushSwitcher(module, &obj[i]);
 				break;
 			default:
-				throw ERR::OBJECT_TYPE_UNSUPPORTED;
+				throw ERR::OBJECT_TYPE_UNSUPPORTED(
+					"Expected Object or Array"
+				);
 		}
 	}
 }
@@ -203,9 +239,9 @@ void Config::loadData(const Object *obj) {
 void Config::parse() {
 	if(parsed) return;
 	parsed = true;
-	trace(ATTR(GREEN)	"Parsing "
-		ATTR(RESET) "config %s...", name.c_str());
-	trace.push();
+	trace.push("Config " + name,
+		ATTR(GREEN)"Parsing "
+		ATTR(RESET)"config %s...", name.c_str());
 	#ifdef _DEBUG
 	printObject(*obj);
 	#endif
@@ -224,9 +260,9 @@ void Compiler::loadData(const Object *obj) {
 void Compiler::parse() {
 	if(parsed) return;
 	parsed = true;
-	trace(ATTR(GREEN)	"Parsing "
-		ATTR(RESET) "compiler %s...", name.c_str());
-	trace.push();
+	trace.push("Compiler " + name,
+		ATTR(GREEN)"Parsing "
+		ATTR(RESET)"compiler %s...", name.c_str());
 	#ifdef _DEBUG
 	printObject(*obj);
 	#endif
@@ -247,9 +283,9 @@ void Linker::loadData(const Object*obj) {
 void Linker::parse() {
 	if(parsed) return;
 	parsed = true;
-	trace(ATTR(GREEN)	"Parsing "
-		ATTR(RESET) "linker %s...", name.c_str());
-	trace.push();
+	trace.push("Linker " + name,
+		ATTR(GREEN)"Parsing "
+		ATTR(RESET)"linker %s...", name.c_str());
 	#ifdef _DEBUG
 	printObject(*obj);
 	#endif
@@ -277,9 +313,9 @@ void Target::loadData(const Object *obj) {
 void Target::parse() {
 	if(parsed) return;
 	parsed = true;
-	trace(ATTR(GREEN)	"Parsing "
-		  ATTR(RESET)	"target %s...", name.c_str());
-	trace.push();
+	trace.push("Target " + name,
+		ATTR(GREEN)"Parsing "
+		ATTR(RESET)"target %s...", name.c_str());
 	#ifdef _DEBUG
 	printObject(*obj);
 	#endif
@@ -299,9 +335,9 @@ void Task::loadData(const Object * obj) {
 void Task::parse() {
 	if(parsed) return;
 	parsed = true;
-	trace(ATTR(GREEN)	"Parsing "
-		ATTR(RESET) "task %s...", name.c_str());
-	trace.push();
+	trace.push("Task " + name,
+		ATTR(GREEN)"Parsing "
+		ATTR(RESET)"task %s...", name.c_str());
 	#ifdef _DEBUG
 	printObject(*obj);
 	#endif
