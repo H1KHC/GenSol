@@ -1,6 +1,7 @@
 2018-01-01 {
 	+ added max tracing depth
 	* output format tweak
+	+ added switcher in each module
 }
 
 2017-12-20 to 2017-12-31 missing

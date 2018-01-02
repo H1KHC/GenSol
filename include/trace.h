@@ -43,7 +43,19 @@ public:
 	Trace() : tabWidthExp(1), depth(0), maxDepth(0) {}
 	void push() { ++depth; checkMaxDepth(); }
 	void pop() { --depth; }
-	void setMaxTracingDepth(int dep) { maxTracing = dep; }
+	void setMaxTracingDepth(int dep) { maxTracing = (dep == 0 ? 0x7FFFFFFF : dep); }
+	void forceOutput(const char *fmt, ...) {
+		if(depth >= maxTracing) depth = maxTracing;
+		buf[0] = 0;
+		if(fmt[0]) {
+			va_list args;
+			va_start(args, fmt);
+			vsprintf(buf, fmt, args);
+			va_end(args);
+		}
+		fprintf(stderr, "%s%s\n" ATTR(RESET),
+			spaces.c_str() + ((maxDepth - depth) << tabWidthExp), buf);
+	}
 	void operator() (const char *fmt, ...) {
 		if(depth >= maxTracing) return;
 		buf[0] = 0;

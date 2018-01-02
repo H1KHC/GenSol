@@ -11,6 +11,7 @@ struct Config : public basicModule {
 	void merge(const Config*);
 	void access();
 	void parse();
+	void loadData(const Object*obj);
 	std::string& includeDirCommand() {
 		if(!includeCommandGenerated) {
 			includeCommandGenerated = true;

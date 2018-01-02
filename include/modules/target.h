@@ -12,6 +12,7 @@ struct Target : public basicModule {
 	module<Linker, Linkers, &linkers> linker;
 	void access();
 	void parse();
+	void loadData(const Object*obj);
 	void matchFiles();
 	void generate();
 	void generateSources();

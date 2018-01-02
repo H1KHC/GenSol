@@ -11,6 +11,7 @@ struct Compiler : public basicModule {
 	void merge(const Compiler*);
 	void access();
 	void parse();
+	void loadData(const Object*obj);
 	std::string command(const std::string& src) {
 		if(!compileFlagMerged) {
 			compileFlagMerged = true;

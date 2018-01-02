@@ -35,14 +35,31 @@
 	}, {
 		"type":"linker",
 		"executableName":"g++",
+		"outputFlag":"-o",
 		"linkFlag":[
 			"-std=c++11",
-			"-lboost_program_options-mt",
-			"-lboost_system-mt",
-			"-lboost_filesystem-mt",
 			"-static-libgcc"
 		],
-		"outputFlag":"-o"
+		"switcher":{
+			"expression":"uname | sed \"s/[_0-9].*//\"",
+			"case": [
+				{
+					"name":"mingw",
+					"linkFlag": [
+						"-lboost_program_options-mt",
+						"-lboost_system-mt",
+						"-lboost_filesystem-mt"
+					]
+				}, {
+					"default":true,
+					"linkFlag": [
+						"-lboost_program_options",
+						"-lboost_system",
+						"-lboost_filesystem"
+					]
+				}
+			]
+		}
 	}, {
 		"type":"linker",
 		"name":"debug",

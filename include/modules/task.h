@@ -12,6 +12,7 @@ struct Task : public basicModule {
 	bool generated;
 	std::vector<module<Target, Targets, &targets> > target;
 	void parse();
+	void loadData(const Object*obj);
 	Task(const Object* obj) : basicModule(obj), generated(false) {}
 	void access();
 	void matchFiles(const std::vector<std::string>&);

@@ -140,10 +140,6 @@ void Target::generateSources() {
 			throw ERR::SOURCE_DEPENDENCE_ANALYSIS_FAILED("Name: [target] %s",
 				name.c_str());
 		buf[0] = 0;
-		for(int i = 1; i <= 10000000; ++i) {
-			int j = i;
-			i = j;
-		}
 		int size = fread(buf, sizeof(char), 16383, pp);
 		pclose(pp);
 		if(!size)

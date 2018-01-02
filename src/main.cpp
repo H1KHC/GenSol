@@ -7,12 +7,17 @@
 #include "error.h"
 #include "solution.h"
 namespace po = boost::program_options;
-
+#ifdef _DEBUG
+#define DEFAULT_TRACING_DEPTH 0
+#else
+#define DEFAULT_TRACING_DEPTH 2
+#endif
 int main(int argc, char **argv) {
 	try {
 		po::options_description general("");
 		general.add_options()
-			("depth,d", po::value<int>()->default_value(2), "Max tracing depth")
+			("depth,d", po::value<int>()->default_value(DEFAULT_TRACING_DEPTH),
+						"Max tracing depth")
 			("help,h", "Show this message and exit")
 			("output,o", po::value<std::string>()->default_value("makefile"), 
 						"Output file name");
