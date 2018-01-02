@@ -21,4 +21,4 @@ gensol [options] [input] ...
   -v [ --verbose ]                 Show more log
 ```
 
-More about the input files, please turn to the wiki.
+To get more about the input files, please turn to the wiki.
