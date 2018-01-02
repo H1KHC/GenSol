@@ -20,7 +20,7 @@ inline void checkArraySuffixSlash(T& c) {
 
 void Compiler::access() {
 	if(accessed == 2) return;
-	else if(accessed == 1) throw ERR::MODULE_CYCLIC_DEPENDENCE_FOUND;
+	else if(accessed == 1) throw ERR::MODULE_CYCLIC_DEPENDENCE_FOUND();
 	accessed = 1;
 	parse();
 	trace(ATTR(GREEN) "Checking "
@@ -44,7 +44,7 @@ void Compiler::access() {
 
 void Config::access() {
 	if(accessed == 2) return;
-	else if(accessed == 1) throw ERR::MODULE_CYCLIC_DEPENDENCE_FOUND;
+	else if(accessed == 1) throw ERR::MODULE_CYCLIC_DEPENDENCE_FOUND();
 	accessed = 1;
 	parse();
 	trace(ATTR(GREEN) "Checking "
@@ -75,7 +75,7 @@ void Config::access() {
 
 void Linker::access() {
 	if(accessed == 2) return;
-	else if(accessed == 1) throw ERR::MODULE_CYCLIC_DEPENDENCE_FOUND;
+	else if(accessed == 1) throw ERR::MODULE_CYCLIC_DEPENDENCE_FOUND();
 	accessed = 1;
 	parse();
 	trace(ATTR(GREEN) "Checking "
@@ -99,7 +99,7 @@ void Linker::access() {
 
 void Target::access() {
 	if(accessed == 2) return;
-	else if(accessed == 1) throw ERR::MODULE_CYCLIC_DEPENDENCE_FOUND;
+	else if(accessed == 1) throw ERR::MODULE_CYCLIC_DEPENDENCE_FOUND();
 	accessed = 1;
 	parse();
 	trace(ATTR(GREEN) "Checking "
@@ -126,7 +126,7 @@ void Target::access() {
 void Task::access() {
 	if(accessed == 2) return;
 	else if(accessed == 1)
-		throw ERR::MODULE_CYCLIC_DEPENDENCE_FOUND;
+		throw ERR::MODULE_CYCLIC_DEPENDENCE_FOUND();
 	accessed = 1;
 	trace(ATTR(GREEN) "Checking "
 		ATTR(RESET) "task %s...", name.c_str());

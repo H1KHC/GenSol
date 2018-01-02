@@ -14,6 +14,13 @@
 		]
 	}, {
 		"type":"compiler",
+		"switcher":true,
+		"expression":"uname | sed \"s/[_0-9].*//\"",
+		"case": [
+			n
+		]
+	}, {
+		"type":"compiler",
 		"name":"debug",
 		"compileFlag":[
 			"-g",

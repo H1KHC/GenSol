@@ -24,7 +24,10 @@ void Solution::load() {
 }
 
 void Solution::parseObject(const js::GenericValue<js::UTF8<> >& obj, int ID) {
-	if(obj.GetType() != js::kObjectType) throw ERR::OBJECT_TYPE_UNSUPPORTED;
+	if(obj.GetType() != js::kObjectType)
+		throw ERR::OBJECT_TYPE_UNSUPPORTED(
+			"In document.#%d, expected Object", ID
+		);
 	if(!obj.HasMember("type")) throw ERR::MODULE_TYPE_UNDEFINED;
 	const char *type = obj["type"].GetString();
 	if(!strcmp(type, "config"))
@@ -37,7 +40,9 @@ void Solution::parseObject(const js::GenericValue<js::UTF8<> >& obj, int ID) {
 		targets.insert(&obj);
 	else if(!strcmp(type, "task"))
 		tasks.insert(&obj);
-	else throw ERR::MODULE_TYPE_UNDEFINED;
+	else throw ERR::MODULE_TYPE_UNDEFINED(
+		"In document.#%d, got Object", ID
+	);
 }
 
 void Solution::analyse(const fileNode* file) {

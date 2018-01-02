@@ -34,13 +34,14 @@ public:
 	}
 	Config* find(const std::string& name) {
 		auto it = map.find(name);
-		if(it == map.end()) throw ERR::MODULE_NOT_FOUND;
+		if(it == map.end())
+			throw ERR::MODULE_NOT_FOUND("Name: [config] %s", name.c_str());
 		return it->second;
 	}
 	void insert(const Object* obj) {
 		Config *config = new Config(obj);
 		if(exist(config->name))
-			throw ERR::MODULE_NAME_CONFLICT;
+			throw ERR::MODULE_NAME_CONFLICT("Name: [config] %s", config->name);
 		map[config->name] = config;
 		trace(ATTR(GREEN) "Found "
 			ATTR(RESET)	"config %s",

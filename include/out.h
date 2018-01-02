@@ -12,7 +12,7 @@ struct OUT {
 	void check() { if(pt > 1000000) flush(); }
 	void init(const char *fileName) {
 		fp = fopen(fileName, "w");
-		if(!fp) throw ERR::FILE_OPEN_FAILED;
+		if(!fp) throw ERR::FILE_OPEN_FAILED("File name: %s", fileName);
 		pt = 0;
 	}
 	OUT() { pt = 0; }

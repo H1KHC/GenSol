@@ -136,7 +136,9 @@ void Target::generateSources() {
 		trace(ATTR("30") "Command: %s", cmd.c_str());
 		#endif
 		FILE* pp = popen(cmd.c_str(), "r");
-		if(!pp) throw ERR::SOURCE_DEPENDENCE_ANALYSIS_FAILED;
+		if(!pp)
+			throw ERR::SOURCE_DEPENDENCE_ANALYSIS_FAILED("Name: [target] %s",
+				name.c_str());
 		buf[0] = 0;
 		for(int i = 1; i <= 10000000; ++i) {
 			int j = i;
@@ -144,11 +146,12 @@ void Target::generateSources() {
 		}
 		int size = fread(buf, sizeof(char), 16383, pp);
 		pclose(pp);
+		if(!size)
+			throw ERR::SOURCE_DEPENDENCE_ANALYSIS_FAILED("Name: [target] %s",
+				name.c_str());
 		buf[size - 1] = '\0';	//erase '\n'
 		format(buf);
-		char *pt = strchr(buf, ':');
-		if(!pt) throw ERR::SOURCE_DEPENDENCE_ANALYSIS_FAILED;
-		out <<binName.c_str() <<pt <<"\n\t"
+		out <<binName.c_str() <<buf <<"\n\t"
 			<<compiler.ptr->command("$<").c_str() <<" -c -o $@"
 			<<config.ptr->includeDirCommand().c_str() <<"\n\n";
 		trace.pop();

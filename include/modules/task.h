@@ -26,7 +26,8 @@ struct Tasks {
 	void insert(const Object* obj) {
 		Task *task = new Task(obj);
 		if(exist(task->name))
-			throw ERR::MODULE_NAME_CONFLICT;
+			throw ERR::MODULE_NAME_CONFLICT("Name: [task] %s",
+				task->name.c_str());
 		map[task->name] = task;
 		trace(ATTR(GREEN) "Found "
 			ATTR(RESET)	"task %s",

@@ -34,14 +34,16 @@ struct Targets {
 	}
 	Target* find(const std::string& name) {
 		auto it = map.find(name);
-		if(it == map.end()) throw ERR::MODULE_NOT_FOUND;
+		if(it == map.end())
+			throw ERR::MODULE_NOT_FOUND("Name: [target] %s", name.c_str());
 		return it->second;
 		return nullptr;
 	}
 	void insert(const Object* obj) {
 		Target *target = new Target(obj);
 		if(exist(target->name))
-			throw ERR::MODULE_NAME_CONFLICT;
+			throw ERR::MODULE_NAME_CONFLICT("Name: [target] %s",
+				target->name.c_str());
 		map[target->name] = target;
 		trace(ATTR(GREEN) "Found "
 			ATTR(RESET)	"target %s",

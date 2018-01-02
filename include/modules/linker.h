@@ -36,14 +36,16 @@ public:
 	}
 	Linker* find(const std::string& name) {
 		auto it = map.find(name);
-		if(it == map.end()) throw ERR::MODULE_NOT_FOUND;
+		if(it == map.end())
+			throw ERR::MODULE_NOT_FOUND("Name: [linker] %s", name.c_str());
 		return it->second;
 		return nullptr;
 	}
 	void insert(const Object* obj) {
 		Linker *linker = new Linker(obj);
 		if(exist(linker->name))
-			throw ERR::MODULE_NAME_CONFLICT;
+			throw ERR::MODULE_NAME_CONFLICT("Name: [linker] %s",
+				linker->name.c_str());
 		map[linker->name] = linker;
 		trace(ATTR(GREEN) "Found "
 			ATTR(RESET)	"linker %s",

@@ -45,10 +45,8 @@ int main(int argc, char **argv) {
 		solution.setOutput(vm["output"].as<std::string>().c_str());
 		trace.setMaxTracingDepth(vm["depth"].as<int>());
 		solution.execute();
-	} catch (const po::error &ex) {
+	} catch (const exception &ex) {
 		puts(ex.what());
-	} catch  (const ERR &err) {
-		setError(err);
 	}
 	return 0;
 }

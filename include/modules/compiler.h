@@ -38,14 +38,16 @@ public:
 	}
 	Compiler* find(const std::string& name) {
 		auto it = map.find(name);
-		if(it == map.end()) throw ERR::MODULE_NOT_FOUND;
+		if(it == map.end())
+			throw ERR::MODULE_NOT_FOUND("Name: [compiler] %s", name.c_str());
 		return it->second;
 		return nullptr;
 	}
 	void insert(const Object* obj) {
 		Compiler *compiler = new Compiler(obj);
 		if(exist(compiler->name))
-			throw ERR::MODULE_NAME_CONFLICT;
+			throw ERR::MODULE_NAME_CONFLICT("Name: [compiler] %s",
+				compiler->name.c_str());
 		map[compiler->name] = compiler;
 		trace(ATTR(GREEN) "Found "
 			ATTR(RESET)	"compiler %s",
