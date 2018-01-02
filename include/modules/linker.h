@@ -22,9 +22,8 @@ struct Linker : public basicModule {
 				linkFlag[0].append(" " + linkFlag[i]);
 			linkFlag.resize(1);
 			outputFlag = " " + outputFlag + " ";
-			executableName += " ";
 		}
-		return executableName + src + linkFlag[0] + outputFlag + out;
+		return executableName + outputFlag + out + " " + src + linkFlag[0];
 	}
 	Linker(const Object* obj) : basicModule(obj), linkFlagMerged(false) {}
 };

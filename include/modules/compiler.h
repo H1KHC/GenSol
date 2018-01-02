@@ -6,13 +6,13 @@
 
 struct Compiler : public basicModule {
 	bool compileFlagMerged;
-	std::string executableName;
+	std::string executableName, outputFlag;
 	std::vector<std::string> compileFlag;
 	void merge(const Compiler*);
 	void access();
 	void parse();
 	void loadData(const Object*obj);
-	std::string command(const std::string& src) {
+	std::string command(const std::string& src, const std::string& out = "") {
 		if(!compileFlagMerged) {
 			compileFlagMerged = true;
 			if(compileFlag.size())
@@ -21,9 +21,10 @@ struct Compiler : public basicModule {
 			for(int i = 1, sz = compileFlag.size(); i < sz; ++i)
 				compileFlag[0].append(" " + compileFlag[i]);
 			compileFlag.resize(1);
-			executableName.append(" ");
+			outputFlag = " " + outputFlag + " ";
 		}
-		return executableName + src + compileFlag[0];
+		return executableName + (out.length() ? (outputFlag + out) : "") + " " +
+			src + compileFlag[0];
 	}
 	std::string objectFileName(const std::string& src) {
 		return src + "." + name + ".o";

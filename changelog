@@ -1,6 +1,7 @@
 2018-01-02 {
 	* changed exception style to std::exception
 	* fixed bug #0003
+	+ added compiler's outputFlag
 }
 
 2018-01-01 {

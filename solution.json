@@ -4,11 +4,12 @@
 		"includeDir":[
 			"include"
 		],
-		"distDir":"bin/",
-		"srcDir":"src"
+		"srcDir":"src",
+		"distDir":"bin/"
 	}, {
 		"type":"compiler",
 		"executableName":"g++",
+		"outputFlag":"-c -o",
 		"compileFlag":[
 			"-std=c++11"
 		]

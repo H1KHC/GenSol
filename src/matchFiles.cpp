@@ -66,7 +66,9 @@ void Target::matchFiles() {
 				if(std::regex_match(fn, R)) {
 					trace.log(ATTR(GREEN) "Matched "
 							  ATTR(RESET) "%s", fn.c_str());
-					sources.push_back(fn);
+					sources.push_back(
+						std::regex_replace(fn, std::regex(R"((\w)\\)"), "$1/",
+							std::regex_constants::match_any));
 				}
 			}
 			trace.pop();

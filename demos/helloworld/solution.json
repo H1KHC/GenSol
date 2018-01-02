@@ -5,6 +5,7 @@
         "srcDir":"./"
     }, {
         "type":"compiler",
+        "outputFlag":"-c -o",
         "executableName":"g++"
     }, {
         "type":"linker",

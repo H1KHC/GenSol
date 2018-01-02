@@ -16,12 +16,6 @@ struct Target : public basicModule {
 	void matchFiles();
 	void generate();
 	void generateSources();
-	std::string compilerCommand(const std::string& src) {
-		return compiler.ptr->command(src);
-	}
-	std::string linkerCommand(const std::string& src) {
-		return linker.ptr->command(src, "%@");
-	}
 	Target(const Object* obj) :
 		basicModule(obj), generated(false),
 		fileMatched(false), fileGenerated(false) {}

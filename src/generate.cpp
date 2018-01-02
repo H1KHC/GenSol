@@ -133,7 +133,7 @@ void Target::generateSources() {
 		buf[size - 1] = '\0';	//erase '\n'
 		format(buf);
 		out <<binName.c_str() <<buf <<"\n\t"
-			<<compiler.ptr->command("$<").c_str() <<" -c -o $@"
+			<<compiler.ptr->command("$<", "$@").c_str()
 			<<config.ptr->includeDirCommand().c_str() <<"\n\n";
 		trace.pop();
 	}

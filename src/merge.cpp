@@ -8,6 +8,8 @@ void Compiler::merge(const Compiler* compiler) {
 	if(!executableName.size())
 		executableName = compiler->executableName;
 	Merge(compileFlag, compiler->compileFlag);
+	if(!outputFlag.length())
+		outputFlag = compiler->outputFlag;
 }
 
 void Config::merge(const Config* config) {

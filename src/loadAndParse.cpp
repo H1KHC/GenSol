@@ -242,6 +242,8 @@ void Config::parse() {
 void Compiler::loadData(const Object *obj) {
 	if(obj->HasMember("executableName"))
 		getString((*obj)["executableName"], executableName);
+	if(obj->HasMember("outputFlag"))
+		getString((*obj)["outputFlag"], outputFlag);
 	if(obj->HasMember("compileFlag"))
 		exposeStringArrayIntoVector((*obj)["compileFlag"], compileFlag);
 }
