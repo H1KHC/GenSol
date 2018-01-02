@@ -1,3 +1,8 @@
+2018-01-02 {
+	* changed exception style to std::exception
+	* fixed bug #0003
+}
+
 2018-01-01 {
 	+ added max tracing depth
 	* output format tweak
@@ -9,11 +14,7 @@
 2017-12-19 {
 	+ added changelog
 	* updated onto github
-	* fixed the bug that when two or more targets uses the same sources and
-		diffrent compiler flags, only the first compiler's settings will be
-		applied
-	* fixed the bug that if user doesn't indicate flag in module compiler
-		or linker, the program will crash
+	* fixed #0001, #0002
 	+ added default task option
 	+ changed option parser to boost::program_options
 }

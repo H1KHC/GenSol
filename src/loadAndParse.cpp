@@ -116,23 +116,16 @@ void evaluateExpression(const Object *obj, char *value) {
 	if(e.GetType() != js::kStringType)
 		throw ERR::OBJECT_TYPE_UNSUPPORTED("Expected String or Array");
 
-	const char *tempstr = e.GetString();
-	int explen = strlen(tempstr), valuelen;
-	char *expression = new char[explen + 14];
-	strcpy(expression, tempstr);
-	strcat(expression, " 2>"
-		#ifdef _WIN32
-		"null"
-		#else
-		"/dev/null"
-		#endif
-	);
+	int valuelen;
+	const char *expression = e.GetString();
+
 	FILE *pp = popen(expression, "r");
 	if(!pp)
 		throw ERR::SWITCHER_EXPRESSION_EVALUATE_FAILED(expression);
 	valuelen = fread(value, sizeof(char), 16383, pp);
 	if(valuelen == 0)
 		throw ERR::SWITCHER_EXPRESSION_EVALUATE_FAILED(expression);
+	while(!isprint(value[valuelen - 1])) value[--valuelen] = '\0';
 	pclose(pp);
 	delete expression;
 }
@@ -148,9 +141,8 @@ void pushSwitcher(ModuleType *module, const Object *obj) {
 			ATTR(RESET) " expression");
 		evaluateExpression(obj, expr);
 		trace.pop();
-#ifdef _DEBUG
-		trace.log(ATTR("30") "Expression evaluated: %s", expr);
-#endif
+		if(solution.isVerbose())
+			trace.log("Expression evaluated: %s", expr);
 		trace.push("Case labels",
 			ATTR(GREEN) "Matching"
 			ATTR(RESET) " labels");
@@ -175,12 +167,10 @@ void pushSwitcher(ModuleType *module, const Object *obj) {
 						throw ERR::SWITCHER_MULTIPLE_DEFAULT_LABEL();
 					defaultTarget = i;
 				} else if(o.HasMember("name")) {
-					auto &n = o["name"];
-					if(n.GetType() != js::kStringType)
-						throw ERR::OBJECT_TYPE_UNSUPPORTED(
-							"Expected String"
-						);
-					if(matchString(n.GetString(), expr)) {
+					std::vector<std::string> names;
+					exposeStringArrayIntoVector(o["name"], names);
+					for(auto &name : names)
+					if(matchString(name.c_str(), expr)) {
 						if(switchTarget != -1) //multiple matched label
 							throw ERR::SWITCHER_MULTIPLE_MATCHED_LABEL();
 						switchTarget = i;
@@ -242,9 +232,8 @@ void Config::parse() {
 	trace.push("Config " + name,
 		ATTR(GREEN)"Parsing "
 		ATTR(RESET)"config %s...", name.c_str());
-	#ifdef _DEBUG
-	printObject(*obj);
-	#endif
+	if(solution.isVerbose())
+		printObject(*obj);
 	loadData(obj);
 	checkSwitcher(this, obj);
 	trace.pop();
@@ -263,9 +252,8 @@ void Compiler::parse() {
 	trace.push("Compiler " + name,
 		ATTR(GREEN)"Parsing "
 		ATTR(RESET)"compiler %s...", name.c_str());
-	#ifdef _DEBUG
-	printObject(*obj);
-	#endif
+	if(solution.isVerbose())
+		printObject(*obj);
 	loadData(obj);
 	checkSwitcher(this, obj);
 	trace.pop();
@@ -286,9 +274,8 @@ void Linker::parse() {
 	trace.push("Linker " + name,
 		ATTR(GREEN)"Parsing "
 		ATTR(RESET)"linker %s...", name.c_str());
-	#ifdef _DEBUG
-	printObject(*obj);
-	#endif
+	if(solution.isVerbose())
+		printObject(*obj);
 	loadData(obj);
 	checkSwitcher(this, obj);
 	trace.pop();
@@ -316,9 +303,8 @@ void Target::parse() {
 	trace.push("Target " + name,
 		ATTR(GREEN)"Parsing "
 		ATTR(RESET)"target %s...", name.c_str());
-	#ifdef _DEBUG
-	printObject(*obj);
-	#endif
+	if(solution.isVerbose())
+		printObject(*obj);
 	loadData(obj);
 	checkSwitcher(this, obj);
 	trace.pop();
@@ -338,9 +324,8 @@ void Task::parse() {
 	trace.push("Task " + name,
 		ATTR(GREEN)"Parsing "
 		ATTR(RESET)"task %s...", name.c_str());
-	#ifdef _DEBUG
-	printObject(*obj);
-	#endif
+	if(solution.isVerbose())
+		printObject(*obj);
 	loadData(obj);
 	checkSwitcher(this, obj);
 	trace.pop();

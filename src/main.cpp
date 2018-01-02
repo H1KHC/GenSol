@@ -20,7 +20,8 @@ int main(int argc, char **argv) {
 						"Max tracing depth")
 			("help,h", "Show this message and exit")
 			("output,o", po::value<std::string>()->default_value("makefile"), 
-						"Output file name");
+						"Output file name")
+			("verbose,v", "Show more log");
 		po::options_description hidden("Hidden options");
 		hidden.add_options()
 			("input,i", po::value< std::vector<std::string> >()->composing(),
@@ -36,10 +37,12 @@ int main(int argc, char **argv) {
 		po::notify(vm);
 
 		if (vm.count("help")) {
-			puts("Usage: gensol [options] [input] ...\n"
-				"  -d [ --depth  ] arg (=2)        Max tracing depth\n"
-				"  -h [ --help   ]                 Show this message and exit\n"
-				"  -o [ --output ] arg (=makefile) Output file name");
+			puts(
+				"Usage: gensol [options] [input] ...\n"
+				"  -d [ --depth   ] arg (=2)        Max tracing depth\n"
+				"  -h [ --help    ]                 Show this message and exit\n"
+				"  -o [ --output  ] arg (=makefile) Output file name\n"
+				"  -v [ --verbose ]                 Show more log");
 			return 0;
 		}
 
@@ -49,6 +52,7 @@ int main(int argc, char **argv) {
 		} else solution.addInput("solution.json");
 		solution.setOutput(vm["output"].as<std::string>().c_str());
 		trace.setMaxTracingDepth(vm["depth"].as<int>());
+		solution.setVerbose(vm.count("verbose"));
 		solution.execute();
 	} catch (const ERR::ERR &ex) {
 		puts(ex.what());

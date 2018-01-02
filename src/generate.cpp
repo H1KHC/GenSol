@@ -69,18 +69,11 @@ void Task::generate() {
 	trace.push("Task " + name,
 		ATTR(GREEN) "Generating "
 		ATTR(RESET) "task %s...", name.c_str());
-	int pt = out.pt;
 	out <<"task_" <<name.c_str() <<": directories";
-	for(auto& n : base) {
-		std::string&&str = " task_" + n;
-		if(out.pt + str.length() - pt >= 80) out <<" \\\n", pt = out.pt;
-		out <<str.c_str();
-	}
+	for(auto& n : base)
+		out <<(" task_" + n).c_str();
 	for(int i = 0, sz = target.size(); i < sz; ++i) {
-		std::string&&str = " " + target[i].ptr->config.ptr->distDir +
-						   target[i].name;
-		if(out.pt + str.length() - pt >= 80) out <<" \\\n", pt = out.pt;
-		out <<str.c_str();
+		out <<" " << target[i].ptr->config.ptr->distDir.c_str() << target[i].name.c_str();
 	}
 	out <<"\n\n";
 	generated = true;
@@ -95,16 +88,9 @@ void Target::generate() {
 		ATTR(GREEN) "Generating "
 		ATTR(RESET) "target %s...", name.c_str());
 	matchFiles();
-	int pt = out.pt;
 	out <<config.ptr->distDir.c_str() <<name.c_str() <<":";
-	for(auto& src : sources) {
-		std::string&& str = " .build/" + compiler.ptr->objectFileName(src);
-		if(out.pt - pt + str.length() >= 80) {
-			out <<" \\\n";
-			pt = out.pt;
-		}
-		out <<str.c_str();
-	}
+	for(auto& src : sources)
+		out <<" .build/" << compiler.ptr->objectFileName(src).c_str();
 	out <<"\n\t" <<linker.ptr->command("$^", "$@").c_str() <<"\n\n";
 	generated = true;
 	trace.pop();
@@ -134,9 +120,8 @@ void Target::generateSources() {
 
 		std::string&& cmd = compiler.ptr->command(src) +
 							" -MM " + config.ptr->includeDirCommand();
-		#ifdef _DEBUG
-		trace.log(ATTR("30") "Command: %s", cmd.c_str());
-		#endif
+		if(solution.isVerbose())
+			trace.log("Command: %s", cmd.c_str());
 		FILE* pp = popen(cmd.c_str(), "r");
 		if(!pp)
 			throw ERR::SOURCE_DEPENDENCE_ANALYSIS_FAILED();

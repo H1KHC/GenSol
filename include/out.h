@@ -19,17 +19,11 @@ struct OUT {
 	~OUT() { flush(); }
 	OUT &operator << (char ch) {
 		putch(ch);
-		#ifdef _DEBUG
-		flush();
-		#endif
 		return *this;
 	}
 	OUT &operator << (const char* str) {
 		while(*str) putch(*(str++));
 		check();
-		#ifdef _DEBUG
-		flush();
-		#endif
 		return *this;
 	}
 };

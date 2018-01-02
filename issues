@@ -1,0 +1,3 @@
+# 0001: When two or more targets uses the same sources and diffrent compiler flags, only the first compiler's settings will be applied
+# 0002: If user doesn't indicate flag in module compiler or linker, the program will crash
+# 0003: If the switcher expression has nonprintable characters follow, it won't match anything

@@ -9,10 +9,10 @@ task_release: directories bin/gensol
 
 # Targets:
 bin/gensol: .build/src\access.cpp.release.o .build/src\debugOutput.cpp.release.o .build/src\generate.cpp.release.o .build/src\help.cpp.release.o .build/src\init.cpp.release.o .build/src\loadAndParse.cpp.release.o .build/src\main.cpp.release.o .build/src\matchFiles.cpp.release.o .build/src\merge.cpp.release.o .build/src\solution.cpp.release.o .build/src\variables.cpp.release.o
-	g++ $^ -lboost_filesystem-mt -lboost_program_options-mt -lboost_system-mt -static-libgcc -std=c++11 -o $@
+	g++ $^ -lboost_filesystem -lboost_program_options -lboost_system -static-libgcc -std=c++11 -o $@
 
 bin/gensold: .build/src\access.cpp.debug.o .build/src\debugOutput.cpp.debug.o .build/src\generate.cpp.debug.o .build/src\help.cpp.debug.o .build/src\init.cpp.debug.o .build/src\loadAndParse.cpp.debug.o .build/src\main.cpp.debug.o .build/src\matchFiles.cpp.debug.o .build/src\merge.cpp.debug.o .build/src\solution.cpp.debug.o .build/src\variables.cpp.debug.o
-	g++ $^ -lboost_filesystem-mt -lboost_program_options-mt -lboost_system-mt -static-libgcc -std=c++11 -o $@
+	g++ $^ -lboost_filesystem -lboost_program_options -lboost_system -static-libgcc -std=c++11 -o $@
 
 # Sources:
 .build/src\access.cpp.release.o: src\access.cpp include/modules/task.h include/modules/basicModule.h include/error.h include/trace.h include/modules/config.h include/modules/compiler.h include/modules/linker.h include/modules/target.h
