@@ -5,21 +5,6 @@
 #include "trace.h"
 namespace fs = boost::filesystem;
 
-// template<typename T, typename iterator = typename T::iterator>
-// inline void deduplicate(T& c) {
-// 	for(iterator it = c.begin(), _end = c.end(); it != _end;) {
-// 		bool erased = false;
-// 		for(iterator i = c.begin(); i != it; ++i) {
-// 			if(*i == *it) {
-// 				erased = true;
-// 				break;
-// 			}
-// 		}
-// 		if(!erased) ++it;
-// 		else it = c.erase(it);
-// 	}
-// }
-
 void Target::matchFiles() {
 	static std::list<std::list<std::string>::iterator> toRemove;
 	bool flag = false;
@@ -40,6 +25,9 @@ void Target::matchFiles() {
 					  ATTR(RESET) "in directory %s...",path.string().c_str());
 			if(fs::exists(path / *file)) {
 				trace.log(ATTR(GREEN) "Found!");
+				*file = std::regex_replace((path / *file).string(),
+							std::regex(R"((\w)\\)"), "$1/",
+							std::regex_constants::match_any);
 				flag = true;
 				break;
 			}

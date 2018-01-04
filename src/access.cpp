@@ -3,20 +3,6 @@
 #include "trace.h"
 
 template<typename T>
-inline void deduplicate(T& c) {
-	for(typename T::iterator bg = c.begin(), it = bg, ed = c.end(); it != ed;) {
-		bool b = false;
-		for(typename T::iterator n = c.begin(); n != it; ++n)
-			if(*it == *n) {
-				it = c.erase(it);
-				b = true;
-				break;
-			}
-		if(!b) ++it;
-	}
-}
-
-template<typename T>
 inline void checkArraySuffixSlash(T& c) {
 	for(auto &dir : c) {
 		char ch = dir[dir.length() - 1];
@@ -37,11 +23,12 @@ void Compiler::access() {
 	parse();
 	if(!base.empty()) {
 		trace.log(ATTR(GREEN) "Checking "
-				ATTR(RESET) "its base compilers...");
+				ATTR(RESET) "its %d base compilers (%s)...", base.size(), base.front().c_str());
 		for(auto& b : base) {
 			Compiler *ances = compilers.find(b);
 			ances->access();
 			merge(ances);
+			trace.debug("Finished checking compiler %s", ances->name.c_str());
 		}
 		base.clear();
 	}
@@ -62,11 +49,12 @@ void Config::access() {
 	parse();
 	if(!base.empty()) {
 		trace.log(ATTR(GREEN) "Checking "
-				ATTR(RESET) "its base config...");
+				ATTR(RESET) "its %d base config (%s)...", base.size(), base.front().c_str());
 		for(auto& b : base) {
 			Config *ances = configs.find(b);
 			ances->access();
 			merge(ances);
+			trace.debug("Finished checking config %s", ances->name.c_str());
 		}
 		base.clear();
 
@@ -101,6 +89,7 @@ void Linker::access() {
 			trace.debug("Location: %#x", ances);
 			ances->access();
 			merge(ances);
+			trace.debug("Finished checking linker %s", ances->name.c_str());
 		}
 		base.clear();
 	}

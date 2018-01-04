@@ -1,6 +1,7 @@
 2018-01-04 {
 	* removed dedumplicate operation in merging modules
 	* changed string container from vector to list
+	* fixed bug #0004
 }
 
 2018-01-03 {

@@ -47,6 +47,7 @@ class Trace {
 		vsprintf(buf, fmt, args);
 		fprintf(stderr, "%s%s\n" ATTR(RESET),
 			spaces.c_str() + ((maxDepth - dep) << tabWidthExp), buf);
+		fflush(stderr);
 	}
 	friend int main(int, char **);
 public:
