@@ -16,6 +16,7 @@ void Config::merge(const Config* config) {
 	Merge(includeDir, config->includeDir);
 	Merge(distDir, config->distDir);
 	Merge(srcDir, config->srcDir);
+	Merge(srcDirR, config->srcDirR);
 }
 
 void Linker::merge(const Linker* linker) {

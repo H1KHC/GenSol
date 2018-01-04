@@ -1,13 +1,13 @@
 #ifndef __LINKER_H__
 #define __LINKER_H__
-#include <vector>
+#include <list>
 #include <map>
 #include "modules/basicModule.h"
 
 struct Linker : public basicModule {
 	bool linkFlagMerged;
 	std::string executableName, outputFlag;
-	std::vector<std::string> linkFlag;
+	std::list<std::string> linkFlag;
 	void merge(const Linker*);
 	void access();
 	void parse();
@@ -16,16 +16,18 @@ struct Linker : public basicModule {
 		if(!linkFlagMerged) {
 			linkFlagMerged = true;
 			if(linkFlag.size())
-				linkFlag[0].insert(0, " ");
+				linkFlag.front().insert(0, " ");
 			else linkFlag.push_back(" ");
-			for(int i = 1, sz = linkFlag.size(); i < sz; ++i)
-				linkFlag[0].append(" " + linkFlag[i]);
+			for(auto it = linkFlag.begin(), _end = linkFlag.end();
+			  ++it != _end;)
+				linkFlag.front().append(" " + *it);
 			linkFlag.resize(1);
 			outputFlag = " " + outputFlag + " ";
 		}
-		return executableName + outputFlag + out + " " + src + linkFlag[0];
+		return executableName + outputFlag + out + " " + src + linkFlag.front();
 	}
 	Linker(const Object* obj) : basicModule(obj), linkFlagMerged(false) {}
+	Linker() : basicModule(), linkFlagMerged(false) {}
 };
 
 class Linkers {

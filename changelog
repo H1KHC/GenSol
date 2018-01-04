@@ -1,3 +1,15 @@
+2018-01-04 {
+	* removed dedumplicate operation in merging modules
+	* changed string container from vector to list
+}
+
+2018-01-03 {
+	* make the switcher stable
+	+ added config.srcDirR
+	* changed target's compiler, linker and config into
+		arrays
+}
+
 2018-01-02 {
 	* changed exception style to std::exception
 	* fixed bug #0003

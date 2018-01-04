@@ -1,6 +1,6 @@
 #include <boost/program_options.hpp>
 //#include <boost/filesystem.hpp>
-#include <vector>
+#include <list>
 #include <string>
 #include <cstdio>
 #include "trace.h"
@@ -16,12 +16,14 @@ int main(int argc, char **argv) {
 	try {
 		po::options_description general("");
 		general.add_options()
-			("depth,d", po::value<int>()->default_value(DEFAULT_TRACING_DEPTH),
+			("debug,d", "Show debug info")
+			("maxdepth,m", po::value<int>()->default_value(DEFAULT_TRACING_DEPTH),
 						"Max tracing depth")
 			("help,h", "Show this message and exit")
 			("output,o", po::value<std::string>()->default_value("makefile"), 
 						"Output file name")
-			("verbose,v", "Show more log");
+			("silent,s", "Don't output any log")
+			("verbose,v", "Show verbose info");
 		po::options_description hidden("Hidden options");
 		hidden.add_options()
 			("input,i", po::value< std::vector<std::string> >()->composing(),
@@ -39,10 +41,12 @@ int main(int argc, char **argv) {
 		if (vm.count("help")) {
 			puts(
 				"Usage: gensol [options] [input] ...\n"
-				"  -d [ --depth   ] arg (=2)        Max tracing depth\n"
-				"  -h [ --help    ]                 Show this message and exit\n"
-				"  -o [ --output  ] arg (=makefile) Output file name\n"
-				"  -v [ --verbose ]                 Show more log");
+				"  -d [ --debug    ]                 Show debug info\n"
+				"  -m [ --maxdepth ] arg (=2)        Max tracing depth\n"
+				"  -h [ --help     ]                 Show this message and exit\n"
+				"  -o [ --output   ] arg (=makefile) Output file name\n"
+				"  -s [ --silent   ]                 Don't output any log\n"
+				"  -v [ --verbose  ]                 Show more log");
 			return 0;
 		}
 
@@ -50,17 +54,24 @@ int main(int argc, char **argv) {
 			for(auto &f : vm["input"].as<std::vector<std::string> >())
 				solution.addInput(f);
 		} else solution.addInput("solution.json");
+
 		solution.setOutput(vm["output"].as<std::string>().c_str());
-		trace.setMaxTracingDepth(vm["depth"].as<int>());
-		solution.setVerbose(vm.count("verbose"));
+		trace.setMaxTracingDepth(vm["maxdepth"].as<int>());
+		if(vm.count("silent")) trace.setOutputLevel(0, 0, 0);
+		else if(vm.count("debug")) {
+			if(vm.count("verbose")) trace.setOutputLevel(1, 1, 1);
+			else trace.setOutputLevel(1, 1, 0);
+		} else trace.setOutputLevel(1, 0, 0);
 		solution.execute();
 	} catch (const ERR::ERR &ex) {
 		puts(ex.what());
 		while(!trace.stack.empty())
 			printf("At %s\n", trace.stack.top().c_str()),
 			trace.pop();
+		return 1;
 	} catch (const std::exception &ex) {
 		puts(ex.what());
+		return 1;
 	}
 	return 0;
 }

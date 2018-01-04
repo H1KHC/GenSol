@@ -56,7 +56,7 @@ void Solution::generate() {
 	for(auto &dir : directories)
 		out <<" " <<dir.c_str();
 	for(auto& target : targets)
-		out <<" "<<target.second->config.ptr->distDir.c_str()
+		out <<" "<<target.second->config.distDir.c_str()
 			<<target.first.c_str();
 	out <<"\n";
 
@@ -72,8 +72,8 @@ void Task::generate() {
 	out <<"task_" <<name.c_str() <<": directories";
 	for(auto& n : base)
 		out <<(" task_" + n).c_str();
-	for(int i = 0, sz = target.size(); i < sz; ++i) {
-		out <<" " << target[i].ptr->config.ptr->distDir.c_str() << target[i].name.c_str();
+	for(auto &tgt : target) {
+		out <<" " << tgt.ptr->config.distDir.c_str() << tgt.name.c_str();
 	}
 	out <<"\n\n";
 	generated = true;
@@ -82,16 +82,19 @@ void Task::generate() {
 
 void Target::generate() {
 	if(generated) return;
-	directories.insert(config.ptr->distDir +
+	directories.insert(config.distDir +
 					   fs::path(name).remove_filename().string());
 	trace.push("Target " + name,
 		ATTR(GREEN) "Generating "
 		ATTR(RESET) "target %s...", name.c_str());
+	if(sources.empty() && sourcesR.empty())
+		sourcesR.push_back(".*\\.cpp"),
+		sourcesR.push_back(".*\\.c");
 	matchFiles();
-	out <<config.ptr->distDir.c_str() <<name.c_str() <<":";
+	out <<config.distDir.c_str() <<name.c_str() <<":";
 	for(auto& src : sources)
-		out <<" .build/" << compiler.ptr->objectFileName(src).c_str();
-	out <<"\n\t" <<linker.ptr->command("$^", "$@").c_str() <<"\n\n";
+		out <<" .build/" << compiler.objectFileName(src).c_str();
+	out <<"\n\t" <<linker.command("$^", "$@").c_str() <<"\n\n";
 	generated = true;
 	trace.pop();
 }
@@ -115,13 +118,12 @@ void Target::generateSources() {
 			ATTR(RESET) "source file %s...", src.c_str());
 		std::string dir = ".build/" +
 							fs::path(src).remove_filename().string(),
-					binName = ".build/" + compiler.ptr->objectFileName(src);
+					binName = ".build/" + compiler.objectFileName(src);
 		directories.insert(dir);
 
-		std::string&& cmd = compiler.ptr->command(src) +
-							" -MM " + config.ptr->includeDirCommand();
-		if(solution.isVerbose())
-			trace.log("Command: %s", cmd.c_str());
+		std::string&& cmd = compiler.command(src) +
+							" -MM " + config.includeDirCommand();
+		trace.verbose(ATTR("30") "Command: %s", cmd.c_str());
 		FILE* pp = popen(cmd.c_str(), "r");
 		if(!pp)
 			throw ERR::SOURCE_DEPENDENCE_ANALYSIS_FAILED();
@@ -133,8 +135,8 @@ void Target::generateSources() {
 		buf[size - 1] = '\0';	//erase '\n'
 		format(buf);
 		out <<binName.c_str() <<buf <<"\n\t"
-			<<compiler.ptr->command("$<", "$@").c_str()
-			<<config.ptr->includeDirCommand().c_str() <<"\n\n";
+			<<compiler.command("$<", "$@").c_str()
+			<<config.includeDirCommand().c_str() <<"\n\n";
 		trace.pop();
 	}
 	fileGenerated = true;

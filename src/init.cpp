@@ -15,10 +15,10 @@ basicModule::basicModule(const Object* _obj) : parsed(false), accessed(0), obj(_
 				"In feild \"name\""
 			);
 		if(obj->HasMember("base")) {
-			auto& n = (*obj)["name"];
+			auto& n = (*obj)["base"];
 			if(n.GetType() == js::kStringType) {
 				base.push_back(n.GetString());
-				if(std::regex_match(base[0], Reg))
+				if(std::regex_match(base.front(), Reg))
 					throw ERR::MODULE_NAME_ILLEGAL(
 							"In feild \"base\""
 						);
@@ -31,7 +31,7 @@ basicModule::basicModule(const Object* _obj) : parsed(false), accessed(0), obj(_
 							"In feild \"base\".#%d, expected String", i
 						);
 					base.push_back(o.GetString());
-					if(std::regex_match(base[i], Reg))
+					if(std::regex_match(base.front(), Reg))
 						throw ERR::MODULE_NAME_ILLEGAL(
 							"In feild \"base\".#%d", i
 						);
@@ -40,6 +40,7 @@ basicModule::basicModule(const Object* _obj) : parsed(false), accessed(0), obj(_
 				throw ERR::OBJECT_TYPE_UNSUPPORTED(
 					"In feild \"base\""
 				);
-		} else base.push_back("global");
+		} else if(name != "global") base.push_back("global");
+		else base.clear();
 	} else name = "global", base.clear();
 }

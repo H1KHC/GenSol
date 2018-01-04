@@ -1,12 +1,12 @@
 #ifndef __CONFIG_H__
 #define __CONFIG_H__
-#include <vector>
+#include <list>
 #include <map>
 #include "modules/basicModule.h"
 
 struct Config : public basicModule {
 	bool includeCommandGenerated;
-	std::vector<std::string> includeDir, srcDir;
+	std::list<std::string> includeDir, srcDir, srcDirR;
 	std::string distDir, includeCommand;
 	void merge(const Config*);
 	void access();
@@ -25,6 +25,7 @@ struct Config : public basicModule {
 	}
 	Config(const Object* obj) :
 		basicModule(obj), includeCommandGenerated(false) {}
+	Config() : basicModule(), includeCommandGenerated(false) {}
 };
 
 class Configs {

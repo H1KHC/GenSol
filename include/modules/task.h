@@ -1,6 +1,6 @@
 #ifndef __TAST_H__
 #define __TAST_H__
-#include <vector>
+#include <list>
 #include <map>
 #include "modules/basicModule.h"
 #include "modules/config.h"
@@ -10,12 +10,11 @@
 
 struct Task : public basicModule {
 	bool generated;
-	std::vector<module<Target, Targets, &targets> > target;
+	std::list<module<Target, Targets, &targets> > target;
 	void parse();
 	void loadData(const Object*obj);
 	Task(const Object* obj) : basicModule(obj), generated(false) {}
 	void access();
-	void matchFiles(const std::vector<std::string>&);
 	void generate();
 };
 

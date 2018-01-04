@@ -1,15 +1,15 @@
 #ifndef __TARGET_H__
 #define __TARGET_H__
-#include <vector>
+#include <list>
 #include <map>
 #include "modules/basicModule.h"
 
 struct Target : public basicModule {
 	bool generated, fileMatched, fileGenerated;
-	std::vector<std::string> sources, sourcesR;
-	module<Config, Configs, &configs> config;
-	module<Compiler, Compilers, &compilers> compiler;
-	module<Linker, Linkers, &linkers> linker;
+	std::list<std::string> sources, sourcesR;
+	Config config;
+	Compiler compiler;
+	Linker linker;
 	void access();
 	void parse();
 	void loadData(const Object*obj);
@@ -18,7 +18,11 @@ struct Target : public basicModule {
 	void generateSources();
 	Target(const Object* obj) :
 		basicModule(obj), generated(false),
-		fileMatched(false), fileGenerated(false) {}
+		fileMatched(false), fileGenerated(false) {
+			config.name = name;
+			compiler.name = name;
+			linker.name = name;
+		}
 };
 
 struct Targets {

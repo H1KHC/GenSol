@@ -15,7 +15,6 @@ struct fileNode {
 };
 
 class Solution {
-	bool verbose;
 	std::set<fileNode> inputFiles;
 	std::string outputFile, currentFile, defaultTask;
 	void addIncludedFile(const std::string& file, const fileNode* parent);
@@ -35,11 +34,6 @@ public:
 	void setOutput(const std::string&);
 	void addInput(const std::string&);
 	void execute();
-
-	bool isVerbose() { return verbose; }
-	void setVerbose(bool v) {
-		verbose = v;
-	}
 };
 
 extern Solution solution;

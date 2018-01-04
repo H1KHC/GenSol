@@ -85,8 +85,8 @@ void Solution::analyse(const fileNode* file) {
 }
 
 template<class strType>
-inline void exposeStringArrayIntoVector(const js::GenericValue<js::UTF8<> >& val,
-							 std::vector<strType>& vec) {
+inline void exposeStringArrayIntolist(const js::GenericValue<js::UTF8<> >& val,
+							 std::list<strType>& vec) {
 	switch(val.GetType()) {
 		case js::kStringType:
 			vec.push_back(strType(val.GetString()));
@@ -127,7 +127,6 @@ void evaluateExpression(const Object *obj, char *value) {
 		throw ERR::SWITCHER_EXPRESSION_EVALUATE_FAILED(expression);
 	while(!isprint(value[valuelen - 1])) value[--valuelen] = '\0';
 	pclose(pp);
-	delete expression;
 }
 
 template <class ModuleType>
@@ -141,8 +140,7 @@ void pushSwitcher(ModuleType *module, const Object *obj) {
 			ATTR(RESET) " expression");
 		evaluateExpression(obj, expr);
 		trace.pop();
-		if(solution.isVerbose())
-			trace.log("Expression evaluated: %s", expr);
+		trace.verbose("Expression evaluated: %s", expr);
 		trace.push("Case labels",
 			ATTR(GREEN) "Matching"
 			ATTR(RESET) " labels");
@@ -167,8 +165,8 @@ void pushSwitcher(ModuleType *module, const Object *obj) {
 						throw ERR::SWITCHER_MULTIPLE_DEFAULT_LABEL();
 					defaultTarget = i;
 				} else if(o.HasMember("name")) {
-					std::vector<std::string> names;
-					exposeStringArrayIntoVector(o["name"], names);
+					std::list<std::string> names;
+					exposeStringArrayIntolist(o["name"], names);
 					for(auto &name : names)
 					if(matchString(name.c_str(), expr)) {
 						if(switchTarget != -1) //multiple matched label
@@ -219,21 +217,23 @@ void checkSwitcher(ModuleType *module, ObjectType *object) {
 
 void Config::loadData(const Object *obj) {
 	if(obj->HasMember("includeDir"))
-		exposeStringArrayIntoVector((*obj)["includeDir"], includeDir);
+		exposeStringArrayIntolist((*obj)["includeDir"], includeDir);
 	if(obj->HasMember("distDir"))
 		getString((*obj)["distDir"], distDir);
 	if(obj->HasMember("srcDir"))
-		exposeStringArrayIntoVector((*obj)["srcDir"], srcDir);
+		exposeStringArrayIntolist((*obj)["srcDir"], srcDir);
+	if(obj->HasMember("srcDirR"))
+		exposeStringArrayIntolist((*obj)["srcDirR"], srcDirR);
 }
 
 void Config::parse() {
 	if(parsed) return;
 	parsed = true;
+	if(!obj) return; // The one in the target doesn't has to be parsed
 	trace.push("Config " + name,
 		ATTR(GREEN)"Parsing "
 		ATTR(RESET)"config %s...", name.c_str());
-	if(solution.isVerbose())
-		printObject(*obj);
+	printObject(*obj);
 	loadData(obj);
 	checkSwitcher(this, obj);
 	trace.pop();
@@ -245,17 +245,17 @@ void Compiler::loadData(const Object *obj) {
 	if(obj->HasMember("outputFlag"))
 		getString((*obj)["outputFlag"], outputFlag);
 	if(obj->HasMember("compileFlag"))
-		exposeStringArrayIntoVector((*obj)["compileFlag"], compileFlag);
+		exposeStringArrayIntolist((*obj)["compileFlag"], compileFlag);
 }
 
 void Compiler::parse() {
 	if(parsed) return;
 	parsed = true;
+	if(!obj) return;
 	trace.push("Compiler " + name,
 		ATTR(GREEN)"Parsing "
 		ATTR(RESET)"compiler %s...", name.c_str());
-	if(solution.isVerbose())
-		printObject(*obj);
+	printObject(*obj);
 	loadData(obj);
 	checkSwitcher(this, obj);
 	trace.pop();
@@ -267,17 +267,17 @@ void Linker::loadData(const Object*obj) {
 	if(obj->HasMember("outputFlag"))
 		getString((*obj)["outputFlag"], outputFlag);
 	if(obj->HasMember("linkFlag"))
-		exposeStringArrayIntoVector((*obj)["linkFlag"], linkFlag);
+		exposeStringArrayIntolist((*obj)["linkFlag"], linkFlag);
 }
 
 void Linker::parse() {
 	if(parsed) return;
 	parsed = true;
+	if(!obj) return;
 	trace.push("Linker " + name,
 		ATTR(GREEN)"Parsing "
 		ATTR(RESET)"linker %s...", name.c_str());
-	if(solution.isVerbose())
-		printObject(*obj);
+	printObject(*obj);
 	loadData(obj);
 	checkSwitcher(this, obj);
 	trace.pop();
@@ -285,28 +285,31 @@ void Linker::parse() {
 
 void Target::loadData(const Object *obj) {
 	if(obj->HasMember("src"))
-		exposeStringArrayIntoVector((*obj)["src"], sources);
+		exposeStringArrayIntolist((*obj)["src"], sources);
 	if(obj->HasMember("srcR"))
-		exposeStringArrayIntoVector((*obj)["srcR"], sourcesR);
+		exposeStringArrayIntolist((*obj)["srcR"], sourcesR);
 	if(obj->HasMember("config"))
-		getString((*obj)["config"], config);
-	else config = "global";
+		exposeStringArrayIntolist((*obj)["config"], config.base);
+	else if(config.base.empty())
+		config.base.push_back("global");
 	if(obj->HasMember("compiler"))
-		getString((*obj)["compiler"], compiler);
-	else compiler = "global";
+		exposeStringArrayIntolist((*obj)["compiler"], compiler.base);
+	else if(compiler.base.empty())
+		compiler.base.push_back("global");
 	if(obj->HasMember("linker"))
-		getString((*obj)["linker"], linker);
-	else linker = "global";
+		exposeStringArrayIntolist((*obj)["linker"], linker.base);
+	else if(linker.base.empty())
+		linker.base.push_back("global");
 }
 
 void Target::parse() {
 	if(parsed) return;
 	parsed = true;
+	if(!obj) return;
 	trace.push("Target " + name,
 		ATTR(GREEN)"Parsing "
 		ATTR(RESET)"target %s...", name.c_str());
-	if(solution.isVerbose())
-		printObject(*obj);
+	printObject(*obj);
 	loadData(obj);
 	checkSwitcher(this, obj);
 	trace.pop();
@@ -314,20 +317,20 @@ void Target::parse() {
 
 void Task::loadData(const Object * obj) {
 	if(obj->HasMember("target"))
-		exposeStringArrayIntoVector((*obj)["target"], target);
+		exposeStringArrayIntolist((*obj)["target"], target);
 	else target.push_back(module<Target, Targets, &targets>("global"));
 	if(obj->HasMember("default"))
-			solution.setDefaultTask(name);
-		}
+		solution.setDefaultTask(name);
+}
 
 void Task::parse() {
 	if(parsed) return;
 	parsed = true;
+	if(!obj) return;
 	trace.push("Task " + name,
 		ATTR(GREEN)"Parsing "
 		ATTR(RESET)"task %s...", name.c_str());
-	if(solution.isVerbose())
-		printObject(*obj);
+	printObject(*obj);
 	loadData(obj);
 	checkSwitcher(this, obj);
 	trace.pop();

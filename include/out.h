@@ -8,7 +8,9 @@ struct OUT {
 	char buf[1048576];
 	int pt;
 	void putch(char ch) { buf[pt++] = ch; }
-	void flush() { if(pt) fwrite(buf,sizeof(char),pt,fp), pt = 0; }
+	void flush() {
+		if(pt) fwrite(buf,sizeof(char),pt,fp), pt = 0;
+	}
 	void check() { if(pt > 1000000) flush(); }
 	void init(const char *fileName) {
 		fp = fopen(fileName, "w");

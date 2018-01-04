@@ -4,9 +4,16 @@
 
 template<typename T>
 inline void deduplicate(T& c) {
-	std::sort(c.begin(), c.end());
-	typename T::iterator new_end = std::unique(c.begin(), c.end());
-	c.erase(new_end, c.end());
+	for(typename T::iterator bg = c.begin(), it = bg, ed = c.end(); it != ed;) {
+		bool b = false;
+		for(typename T::iterator n = c.begin(); n != it; ++n)
+			if(*it == *n) {
+				it = c.erase(it);
+				b = true;
+				break;
+			}
+		if(!b) ++it;
+	}
 }
 
 template<typename T>
@@ -20,50 +27,57 @@ inline void checkArraySuffixSlash(T& c) {
 
 void Compiler::access() {
 	if(accessed == 2) return;
-	else if(accessed == 1) throw ERR::MODULE_CYCLIC_DEPENDENCE_FOUND();
+	else if(accessed == 1) throw ERR::MODULE_CYCLIC_DEPENDENCE_FOUND(
+		("In "+name).c_str()
+	);
 	accessed = 1;
-	parse();
 	trace.push("Compiler "+name,
 		ATTR(GREEN) "Checking "
 		ATTR(RESET) "compiler %s...", name.c_str());
 	parse();
-	trace.log(ATTR(GREEN) "Checking "
-			ATTR(RESET) "its base compiler...");
-	for(auto& b : base) {
-		Compiler *ances = compilers.find(b);
-		ances->access();
-		merge(ances);
+	if(!base.empty()) {
+		trace.log(ATTR(GREEN) "Checking "
+				ATTR(RESET) "its base compilers...");
+		for(auto& b : base) {
+			Compiler *ances = compilers.find(b);
+			ances->access();
+			merge(ances);
+		}
+		base.clear();
 	}
-	base.clear();
-	deduplicate(compileFlag);
+	//deduplicate(compileFlag);
 	trace.pop();
 	accessed = 2;
 }
 
 void Config::access() {
 	if(accessed == 2) return;
-	else if(accessed == 1) throw ERR::MODULE_CYCLIC_DEPENDENCE_FOUND();
+	else if(accessed == 1) throw ERR::MODULE_CYCLIC_DEPENDENCE_FOUND(
+		("In "+name).c_str()
+	);
 	accessed = 1;
-	parse();
 	trace.push("Config " + name,
 		ATTR(GREEN) "Checking "
 		ATTR(RESET) "config %s...", name.c_str());
 	parse();
-	trace.log(ATTR(GREEN) "Checking "
-			ATTR(RESET) "its base config...");
-	for(auto& b : base) {
-		Config *ances = configs.find(b);
-		ances->access();
-		merge(ances);
+	if(!base.empty()) {
+		trace.log(ATTR(GREEN) "Checking "
+				ATTR(RESET) "its base config...");
+		for(auto& b : base) {
+			Config *ances = configs.find(b);
+			ances->access();
+			merge(ances);
+		}
+		base.clear();
+
 	}
-	base.clear();
-	deduplicate(includeDir);
+	//deduplicate(includeDir);
 	checkArraySuffixSlash(includeDir);
 	char ch = distDir[distDir.length() - 1];
 	if(ch != '/' && ch != '\\') {
 		distDir.append("/");
 	}
-	deduplicate(srcDir);
+	//deduplicate(srcDir);
 	checkArraySuffixSlash(srcDir);
 	trace.pop();
 	accessed = 2;
@@ -71,31 +85,36 @@ void Config::access() {
 
 void Linker::access() {
 	if(accessed == 2) return;
-	else if(accessed == 1) throw ERR::MODULE_CYCLIC_DEPENDENCE_FOUND();
+	else if(accessed == 1) throw ERR::MODULE_CYCLIC_DEPENDENCE_FOUND(
+		("In " + name).c_str()
+	);
 	accessed = 1;
-	parse();
 	trace.push("Linker " + name,
 		ATTR(GREEN) "Checking "
 		ATTR(RESET) "linker %s...", name.c_str());
 	parse();
-	trace.log(ATTR(GREEN) "Checking "
-		ATTR(RESET) "its base linker...");
-	for(auto& b : base) {
-		Linker *ances = linkers.find(b);
-		ances->access();
-		merge(ances);
+	if(!base.empty()) {
+		trace.log(ATTR(GREEN) "Checking "
+			ATTR(RESET) "its %d base linker (%s)...", base.size(), base.front().c_str());
+		for(auto& b : base) {
+			Linker *ances = linkers.find(b);
+			trace.debug("Location: %#x", ances);
+			ances->access();
+			merge(ances);
+		}
+		base.clear();
 	}
-	base.clear();
-	deduplicate(linkFlag);
+	//deduplicate(linkFlag);
 	trace.pop();
 	accessed = 2;
 }
 
 void Target::access() {
 	if(accessed == 2) return;
-	else if(accessed == 1) throw ERR::MODULE_CYCLIC_DEPENDENCE_FOUND();
+	else if(accessed == 1) throw ERR::MODULE_CYCLIC_DEPENDENCE_FOUND(
+		("In " + name).c_str()
+	);
 	accessed = 1;
-	parse();
 	trace.push("Target " + name,
 		ATTR(GREEN) "Checking "
 		ATTR(RESET) "target %s...", name.c_str());
@@ -104,14 +123,15 @@ void Target::access() {
 	config.access();
 	compiler.access();
 	linker.access();
+	trace.debug("Finished tool check");
 
 	// dependency relationship handled in makefile
 
-	deduplicate(sourcesR);
+	//deduplicate(sourcesR);
 	
-	for(auto it = base.begin(), _end = base.end();
-	  it != _end; ++it)
-		if(!tasks.exist(*it)) base.erase(it);
+	for(auto it = base.begin(), _end = base.end(); it != _end;)
+		if(!targets.exist(*it)) it = base.erase(it);
+		else ++it;
 	
 	trace.pop();
 	accessed = 2;
@@ -120,7 +140,7 @@ void Target::access() {
 void Task::access() {
 	if(accessed == 2) return;
 	else if(accessed == 1)
-		throw ERR::MODULE_CYCLIC_DEPENDENCE_FOUND();
+		throw ERR::MODULE_CYCLIC_DEPENDENCE_FOUND(("In "+name).c_str());
 	accessed = 1;
 	trace.push("Task " + name,
 		ATTR(GREEN) "Checking "
@@ -132,9 +152,9 @@ void Task::access() {
 	  it != _end; ++it)
 		it->locate(), it->ptr->access();
 		
-	for(auto it = base.begin(), _end = base.end();
-	  it != _end; ++it)
-		if(!tasks.exist(*it)) base.erase(it);
+	for(auto it = base.begin(), _end = base.end(); it != _end;)
+		if(!tasks.exist(*it)) it = base.erase(it);
+		else ++it;
 	trace.pop();
 	accessed = 2;
 }

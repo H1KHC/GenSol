@@ -16,7 +16,7 @@ protected:
 			len += vsprintf(str + len, format, args);
 			str[len++] = ')';
 		}
-		str[len] = '\n';
+		str[len] = '\0';
 	}
 public:
 	virtual const char *what() const noexcept override { return str; }

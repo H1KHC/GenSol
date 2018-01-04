@@ -1,6 +1,6 @@
 #ifndef __BASICMODULE_H__
 #define __BASICMODULE_H__
-#include <vector>
+#include <list>
 #include <string>
 #include <rapidjson/document.h>
 #include "error.h"
@@ -14,11 +14,12 @@ struct basicModule {
 	int accessed;
 	const Object* obj;
 	std::string name;
-	std::vector<std::string> base;
+	std::list<std::string> base;
 	//virtual void access();
 	//virtual void parse();
 
 	basicModule(const Object* _obj);
+	basicModule() : parsed(false), accessed(0), obj(nullptr), name(), base() {}
 };
 
 template<class moduleType, class containerType, containerType* container>

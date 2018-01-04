@@ -50,6 +50,7 @@ class Trace {
 	}
 	friend int main(int, char **);
 public:
+	bool logbit, debugbit, verbosebit;
 	Trace() : tabWidthExp(1), depth(0), maxDepth(0) {}
 	void push(std::string pos, const char *fmt = "", ...) {
 		if(depth < maxTracing && fmt[0]) {
@@ -64,7 +65,21 @@ public:
 	void pop() { --depth; stack.pop(); }
 	void setMaxTracingDepth(int dep) { maxTracing = (dep == 0 ? 0x7FFFFFFF : dep); }
 	void log(const char *fmt, ...) {
-		if(depth >= maxTracing) return;
+		if(!logbit || depth >= maxTracing) return;
+		va_list args;
+		va_start(args, fmt);
+		output(depth, fmt, args);
+		va_end(args);
+	}
+	void debug(const char *fmt, ...) {
+		if(!debugbit || depth >= maxTracing) return;
+		va_list args;
+		va_start(args, fmt);
+		output(depth, fmt, args);
+		va_end(args);
+	}
+	void verbose(const char *fmt, ...) {
+		if(!verbosebit || depth >= maxTracing) return;
 		va_list args;
 		va_start(args, fmt);
 		output(depth, fmt, args);
@@ -75,6 +90,15 @@ public:
 		va_start(args, fmt);
 		output((depth >= maxTracing) ? maxTracing : depth, fmt, args);
 		va_end(args);
+	}
+	void setOutputLevel(bool _log, bool _debug, bool _verbose) {
+		logbit = (debugbit = (verbosebit = false));
+		if(!_log) return;
+		logbit = true;
+		if(!_debug) return;
+		debugbit = true;
+		if(!_verbose) return;
+		verbosebit = true;
 	}
 };
 

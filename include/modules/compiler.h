@@ -1,13 +1,13 @@
 #ifndef __COMPILER_H__
 #define __COMPILER_H__
 #include <map>
-#include <vector>
+#include <list>
 #include "modules/basicModule.h"
 
 struct Compiler : public basicModule {
 	bool compileFlagMerged;
 	std::string executableName, outputFlag;
-	std::vector<std::string> compileFlag;
+	std::list<std::string> compileFlag;
 	void merge(const Compiler*);
 	void access();
 	void parse();
@@ -16,20 +16,22 @@ struct Compiler : public basicModule {
 		if(!compileFlagMerged) {
 			compileFlagMerged = true;
 			if(compileFlag.size())
-				compileFlag[0].insert(0, " ");
+				compileFlag.front().insert(0, " ");
 			else compileFlag.push_back(" ");
-			for(int i = 1, sz = compileFlag.size(); i < sz; ++i)
-				compileFlag[0].append(" " + compileFlag[i]);
+			for(auto it = compileFlag.begin(), _end = compileFlag.end();
+			  ++it != _end;)
+				compileFlag.front().append(" " + *it);
 			compileFlag.resize(1);
 			outputFlag = " " + outputFlag + " ";
 		}
 		return executableName + (out.length() ? (outputFlag + out) : "") + " " +
-			src + compileFlag[0];
+			src + compileFlag.front();
 	}
 	std::string objectFileName(const std::string& src) {
 		return src + "." + name + ".o";
 	}
 	Compiler(const Object* obj) : basicModule(obj), compileFlagMerged(false) {}
+	Compiler() : basicModule(), compileFlagMerged(false) {}
 };
 
 class Compilers {

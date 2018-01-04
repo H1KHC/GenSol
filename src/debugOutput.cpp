@@ -5,8 +5,10 @@
 namespace js = rapidjson;
 
 void printObject(const js::GenericValue<js::UTF8<> >& obj) {
-	js::StringBuffer buffer;
-	js::Writer<js::StringBuffer> writer(buffer);
-	obj.Accept(writer);
-	trace.log(ATTR("30")"Object:%s", buffer.GetString());
+	if(trace.verbosebit) {
+		js::StringBuffer buffer;
+		js::Writer<js::StringBuffer> writer(buffer);
+		obj.Accept(writer);
+		trace.verbose(ATTR("30")"Object:%s", buffer.GetString());
+	}
 }

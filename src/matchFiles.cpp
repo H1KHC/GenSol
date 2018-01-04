@@ -5,15 +5,23 @@
 #include "trace.h"
 namespace fs = boost::filesystem;
 
-template<typename T>
-inline void deduplicate(T& c) {
-	std::sort(c.begin(), c.end());
-	typename T::iterator new_end = std::unique(c.begin(), c.end());
-	c.erase(new_end, c.end());
-}
+// template<typename T, typename iterator = typename T::iterator>
+// inline void deduplicate(T& c) {
+// 	for(iterator it = c.begin(), _end = c.end(); it != _end;) {
+// 		bool erased = false;
+// 		for(iterator i = c.begin(); i != it; ++i) {
+// 			if(*i == *it) {
+// 				erased = true;
+// 				break;
+// 			}
+// 		}
+// 		if(!erased) ++it;
+// 		else it = c.erase(it);
+// 	}
+// }
 
 void Target::matchFiles() {
-	static std::vector<std::vector<std::string>::iterator> toRemove;
+	static std::list<std::list<std::string>::iterator> toRemove;
 	bool flag = false;
 	toRemove.clear();
 	if(fileMatched) return;
@@ -26,7 +34,7 @@ void Target::matchFiles() {
 		trace.log(ATTR(GREEN) "Checking "
 				  ATTR(RESET) "for file %s...", file->c_str());
 		flag = false;
-		for(auto& dir: config.ptr->srcDir) {
+		for(auto& dir: config.srcDir) {
 			auto path = fs::current_path() / fs::path(dir);
 			trace.log(ATTR(GREEN) "Searching "
 					  ATTR(RESET) "in directory %s...",path.string().c_str());
@@ -56,10 +64,27 @@ void Target::matchFiles() {
 		trace.push("Regex " + file,
 			ATTR(GREEN) "Matching "
 			ATTR(RESET) "file regex %s...", file.c_str());
-		for(auto& dir: config.ptr->srcDir) {
+		for(auto& dir: config.srcDir) {
 			std::regex R(file);
 			trace.push("Directory " + dir,
 				ATTR(GREEN) "Searching "
+				ATTR(RESET) "in directory %s...",dir.c_str());
+			for(auto&f : fs::directory_iterator(dir)) {
+				auto& fn = f.path().string();
+				if(std::regex_match(fn, R)) {
+					trace.log(ATTR(GREEN) "Matched "
+							  ATTR(RESET) "%s", fn.c_str());
+					sources.push_back(
+						std::regex_replace(fn, std::regex(R"((\w)\\)"), "$1/",
+							std::regex_constants::match_any));
+				}
+			}
+			trace.pop();
+		}
+		for(auto& dir: config.srcDirR) {
+			std::regex R(file);
+			trace.push("Directory " + dir,
+				ATTR(GREEN) "Depth-first searching"
 				ATTR(RESET) "in directory %s...",dir.c_str());
 			for(auto&f : fs::recursive_directory_iterator(dir)) {
 				auto& fn = f.path().string();
@@ -76,7 +101,7 @@ void Target::matchFiles() {
 		trace.pop();
 	}
 	sourcesR.clear();
-	deduplicate(sources);
+	//deduplicate(sources);
 	trace.pop();
 	fileMatched = true;
 }
