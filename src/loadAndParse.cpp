@@ -5,6 +5,7 @@
 #include "error.h"
 #include "modules/task.h"
 #include "solution.h"
+#include "variables.h"
 namespace js = rapidjson;
 
 js::Document document;
@@ -44,6 +45,8 @@ void Solution::parseObject(const js::GenericValue<js::UTF8<> >& obj, int ID) {
 		targets.insert(&obj);
 	else if(matchString(type, "task"))
 		tasks.insert(&obj);
+	// else if(matchString(type, "variables"))
+	// 	variables.insert(&obj);
 	else throw ERR::MODULE_TYPE_UNDEFINED("type: %d", type);
 }
 
@@ -132,86 +135,98 @@ void evaluateExpression(const Object *obj, char *value) {
 template <class ModuleType>
 void pushSwitcher(ModuleType *module, const Object *obj) {
 	char *expr = new char[16384];
-	trace.push("Switcher",
-		ATTR(GREEN) "Found"
-		ATTR(RESET) " a switcher");
-		trace.push("Expression",
-			ATTR(GREEN) "Evaluating"
-			ATTR(RESET) " expression");
-		evaluateExpression(obj, expr);
-		trace.pop();
-		trace.verbose("Expression evaluated: %s", expr);
-		trace.push("Case labels",
-			ATTR(GREEN) "Matching"
-			ATTR(RESET) " labels");
-		if(!obj->HasMember("case"))
-			throw ERR::OBJECT_INVALID("Missing \"case\"");
-		auto &c = (*obj)["case"];
-		if(c.GetType() != js::kArrayType)
-			throw ERR::OBJECT_TYPE_UNSUPPORTED(
-				"Expect Array"
-			);
-		if(!c.Size())
-			throw ERR::OBJECT_INVALID("Empty case labels");
-		int defaultTarget = -1, switchTarget = -1, size = c.Size();
-		for(int i = 0; i < size; ++i) {
-			char buf[32];
-			sprintf(buf, "Case label #%d", i);
-			trace.push(buf);
-			if(c[i].GetType() == js::kObjectType) {
-				auto& o = c[i];
-				if(o.HasMember("default")) {
-					if(defaultTarget != -1)
-						throw ERR::SWITCHER_MULTIPLE_DEFAULT_LABEL();
-					defaultTarget = i;
-				} else if(o.HasMember("name")) {
-					std::list<std::string> names;
-					exposeStringArrayIntolist(o["name"], names);
-					for(auto &name : names)
-					if(matchString(name.c_str(), expr)) {
-						if(switchTarget != -1) //multiple matched label
-							throw ERR::SWITCHER_MULTIPLE_MATCHED_LABEL();
-						switchTarget = i;
-					}
+	trace.push("Expression",
+		ATTR(GREEN) "Evaluating"
+		ATTR(RESET) " expression");
+	evaluateExpression(obj, expr);
+	trace.pop();
+	trace.verbose("Expression evaluated: %s", expr);
+	trace.push("Case labels",
+		ATTR(GREEN) "Matching"
+		ATTR(RESET) " labels");
+	if(!obj->HasMember("case"))
+		throw ERR::OBJECT_INVALID("Missing \"case\"");
+	auto &c = (*obj)["case"];
+	if(c.GetType() != js::kArrayType)
+		throw ERR::OBJECT_TYPE_UNSUPPORTED(
+			"Expect Array"
+		);
+	if(!c.Size())
+		throw ERR::OBJECT_INVALID("Empty case labels");
+	int defaultTarget = -1, switchTarget = -1, size = c.Size();
+	for(int i = 0; i < size; ++i) {
+		char buf[32];
+		sprintf(buf, "Case label #%d", i);
+		trace.push(buf);
+		if(c[i].GetType() == js::kObjectType) {
+			auto& o = c[i];
+			if(o.HasMember("default")) {
+				if(defaultTarget != -1)
+					throw ERR::SWITCHER_MULTIPLE_DEFAULT_LABEL();
+				defaultTarget = i;
+			} else if(o.HasMember("name")) {
+				std::list<std::string> names;
+				exposeStringArrayIntolist(o["name"], names);
+				for(auto &name : names)
+				if(matchString(name.c_str(), expr)) {
+					if(switchTarget != -1) //multiple matched label
+						throw ERR::SWITCHER_MULTIPLE_MATCHED_LABEL();
+					switchTarget = i;
 				}
-			} else throw ERR::OBJECT_TYPE_UNSUPPORTED(
-				"Expeted Object"
-			);
-			trace.pop();
-		}
-		if(switchTarget == -1) {
-			if(defaultTarget == -1)
-				throw ERR::SWITCHER_MATCH_FAILED();
-			else {
-				trace.log(ATTR(GREEN) "Matched "
-						ATTR(RESET) "default label");
-				module->loadData(&c[defaultTarget]);
 			}
-		} else {
-			trace.log(ATTR(GREEN) "Matched "
-					ATTR(RESET) "label #%d", switchTarget);
-			module->loadData(&c[switchTarget]);
-		}
-		delete expr;
+		} else throw ERR::OBJECT_TYPE_UNSUPPORTED(
+			"Expeted Object"
+		);
 		trace.pop();
+	}
+	if(switchTarget == -1) {
+		if(defaultTarget == -1)
+			throw ERR::SWITCHER_MATCH_FAILED();
+		else {
+			trace.log(ATTR(GREEN) "Matched "
+					ATTR(RESET) "default label");
+			module->loadData(&c[defaultTarget]);
+		}
+	} else {
+		trace.log(ATTR(GREEN) "Matched "
+				ATTR(RESET) "label #%d", switchTarget);
+		module->loadData(&c[switchTarget]);
+	}
+	delete expr;
 	trace.pop();
 }
 
 template <class ModuleType, class ObjectType>
 void checkSwitcher(ModuleType *module, ObjectType *object) {
 	if(object->HasMember("switcher")) {
+		trace.push("Switcher Container",
+			ATTR(GREEN) "Found"
+			ATTR(RESET) " a switcher container!");
 		const Object &obj = (*object)["switcher"];
 		switch(obj.GetType()) {
-			case js::kObjectType: pushSwitcher(module, &obj); break;
+			case js::kObjectType: {
+				trace.push("Switcher",
+				  ATTR(GREEN) "Handling"
+				  ATTR(RESET) " switcher...");
+				pushSwitcher(module, &obj);
+				trace.pop();
+			}break;
 			case js::kArrayType:
-				for(int i = 0, sz = obj.Size(); i < sz; ++i)
+				for(int i = 0, sz = obj.Size(); i < sz; ++i) {
+					char temp[16];
+					sprintf(temp, "Switcher #%d", i);
+					trace.push(temp,
+					ATTR(GREEN) "Handling"
+					ATTR(RESET) " switcher #%d...", i);
 					pushSwitcher(module, &obj[i]);
+				}
 				break;
 			default:
 				throw ERR::OBJECT_TYPE_UNSUPPORTED(
 					"Expected Object or Array"
 				);
 		}
+		trace.pop();
 	}
 }
 
@@ -318,7 +333,6 @@ void Target::parse() {
 void Task::loadData(const Object * obj) {
 	if(obj->HasMember("target"))
 		exposeStringArrayIntolist((*obj)["target"], target);
-	else target.push_back(module<Target, Targets, &targets>("global"));
 	if(obj->HasMember("default"))
 		solution.setDefaultTask(name);
 }

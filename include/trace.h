@@ -32,7 +32,6 @@
 #define BGREY		"47"
 
 class Trace {
-	char buf[16384];
 	const int tabWidthExp;
 	std::string spaces;
 	std::stack<std::string> stack;
@@ -42,11 +41,13 @@ class Trace {
 		(spaces.append(std::string((depth - maxDepth) << tabWidthExp, ' ')),
 			maxDepth = depth);
 	}
+	void leadingSpace(int dep) {
+		fputs(spaces.c_str() + ((maxDepth - dep) << tabWidthExp), stderr);
+	}
 	void output(int dep, const char *fmt, va_list args) {
-		buf[0] = 0;
-		vsprintf(buf, fmt, args);
-		fprintf(stderr, "%s%s\n" ATTR(RESET),
-			spaces.c_str() + ((maxDepth - dep) << tabWidthExp), buf);
+		leadingSpace(dep);
+		vfprintf(stderr, fmt, args);
+		fputs("\n" ATTR(RESET), stderr);
 		fflush(stderr);
 	}
 	friend int main(int, char **);

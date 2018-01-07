@@ -1,10 +1,7 @@
 #ifndef __TAST_H__
 #define __TAST_H__
-#include <list>
-#include <map>
-#include "modules/basicModule.h"
-#include "modules/config.h"
 #include "modules/compiler.h"
+#include "modules/config.h"
 #include "modules/linker.h"
 #include "modules/target.h"
 

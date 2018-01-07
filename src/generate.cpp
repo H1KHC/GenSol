@@ -13,16 +13,20 @@ void Solution::generate() {
 	out.init(outputFile.c_str());
 	trace.push("Solution generate",
 		ATTR(GREEN) "\nGenerating " ATTR(RESET) "makefile...");
-	out <<".PHONY: directories clean";
+	out <<".PHONY: all clean directories distclean";
 	for(auto &task : tasks)
 		out <<" task_" <<task.second->name.c_str();
 	out <<"\n\n";
 	if(tasks.map.size() == 1) defaultTask = tasks.map.begin()->first;
 	if(defaultTask.length()) {
 		out <<"default: task_" <<defaultTask.c_str() <<"\n\n";
-	} else {
-		out <<"default:\n\t@echo please indicate a task!\n\n";
 	}
+
+	out <<"all:";
+	for(auto& task : tasks)
+		out <<" task_" <<task.first.c_str();
+	out <<"\n\n";
+
 	out <<"# Tasks:\n";
 	for(auto &task : tasks)
 		task.second->generate();
@@ -42,23 +46,20 @@ void Solution::generate() {
 		while(it != _end && (*it == "./" || *it == ".\\"
 			|| *it == "../" || *it == "..\\"))
 			it = directories.erase(it);
-	out <<"directories:\n\tmkdir -p";
+	out <<"directories:\n\t@mkdir -p";
 	for(auto& dir : directories)
 		out <<" "<<dir.c_str();
-	out <<"\n\n";
+	out <<"\n\t@echo \"Directories has been created!\"\n\n";
 
-	out <<"all:";
-	for(auto& task : tasks)
-		out <<" task_" <<task.first.c_str();
-	out <<"\n\n";
+	out <<"distclean:\n\t@rm -rf .build/\n\t@echo \"Cleaned!\"\n\n";
 
-	out <<"clean:\n\trm -rf";
+	out <<"clean:\n\t@rm -rf";
 	for(auto &dir : directories)
 		out <<" " <<dir.c_str();
 	for(auto& target : targets)
 		out <<" "<<target.second->config.distDir.c_str()
 			<<target.first.c_str();
-	out <<"\n";
+	out <<"\n\t@echo \"Cleaned!\"\n";
 
 	trace.pop();
 	trace.log(ATTR(GREEN) "Done!" ATTR(RESET));
@@ -75,7 +76,7 @@ void Task::generate() {
 	for(auto &tgt : target) {
 		out <<" " << tgt.ptr->config.distDir.c_str() << tgt.name.c_str();
 	}
-	out <<"\n\n";
+	out <<"\n\t@echo \"Task "<<name.c_str() <<" has been finished!\"\n\n";
 	generated = true;
 	trace.pop();
 }
@@ -94,7 +95,8 @@ void Target::generate() {
 	out <<config.distDir.c_str() <<name.c_str() <<":";
 	for(auto& src : sources)
 		out <<" .build/" << compiler.objectFileName(src).c_str();
-	out <<"\n\t" <<linker.command("$^", "$@").c_str() <<"\n\n";
+	out <<"\n\t@" <<linker.command("$^", "$@").c_str() <<"\n"
+		"\t@echo \"[ 100% ] Target " <<name.c_str() <<" has been built!\"\n\n";
 	generated = true;
 	trace.pop();
 }
@@ -108,6 +110,7 @@ void format(char *buf) {
 
 void Target::generateSources() {
 	static char buf[16384];
+	int sourceCount = sources.size(), now = 0;
 	if(fileGenerated) return;
 	trace.push("Sources of " + name,
 		ATTR(GREEN) "Generating "
@@ -123,21 +126,28 @@ void Target::generateSources() {
 
 		std::string&& cmd = compiler.command(src) +
 							" -MM " + config.includeDirCommand();
-		trace.verbose(ATTR("30") "Command: %s", cmd.c_str());
-		FILE* pp = popen(cmd.c_str(), "r");
-		if(!pp)
-			throw ERR::SOURCE_DEPENDENCE_ANALYSIS_FAILED();
-		buf[0] = 0;
-		int size = fread(buf, sizeof(char), 16383, pp);
-		pclose(pp);
-		if(!size)
-			throw ERR::SOURCE_DEPENDENCE_ANALYSIS_FAILED();
-		buf[size - 1] = '\0';	//erase '\n'
-		format(buf);
-		out <<binName.c_str() <<buf <<"\n\t"
-			<<compiler.command("$<", "$@").c_str()
-			<<config.includeDirCommand().c_str() <<"\n\n";
+		trace.verbose("Command: %s", cmd.c_str());
+		{
+			FILE* pp = popen(cmd.c_str(), "r");
+			if(!pp)
+				throw ERR::SOURCE_DEPENDENCE_ANALYSIS_FAILED();
+			buf[0] = 0;
+			int size = fread(buf, sizeof(char), 16383, pp);
+			pclose(pp);
+			if(!size)
+				throw ERR::SOURCE_DEPENDENCE_ANALYSIS_FAILED();
+			buf[size - 1] = '\0';	//erase '\n'
+			format(buf);
+		}
+		out <<binName.c_str() <<buf <<"\n";
+		if(now == 0) out <<"\t@echo \"Generating sources for target " <<name.c_str() <<"...\"\n";
+		out <<"\t@echo \"[ " <<OUT::Format("%3d", (now * 100) / sourceCount)
+		<<"% ] Compiling " <<binName.c_str() <<"...\"\n";
+		out << "\t@"<<compiler.command("$<", "$@").c_str()
+		<<config.includeDirCommand().c_str() <<"\n\n";
+
 		trace.pop();
+		++now;
 	}
 	fileGenerated = true;
 	trace.pop();

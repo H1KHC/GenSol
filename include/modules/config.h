@@ -1,8 +1,10 @@
 #ifndef __CONFIG_H__
 #define __CONFIG_H__
+#include "modules/basicModule.h"
+#include "trace.h"
+#include "error.h"
 #include <list>
 #include <map>
-#include "modules/basicModule.h"
 
 struct Config : public basicModule {
 	bool includeCommandGenerated;

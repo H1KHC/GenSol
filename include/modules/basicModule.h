@@ -1,13 +1,11 @@
 #ifndef __BASICMODULE_H__
 #define __BASICMODULE_H__
+#include <rapidjson/document.h>
 #include <list>
 #include <string>
-#include <rapidjson/document.h>
-#include "error.h"
-#include "trace.h"
 
 namespace js = rapidjson;
-typedef js::GenericValue<js::UTF8<> > Object;
+typedef js::GenericValue< js::UTF8<> > Object;
 
 struct basicModule {
 	bool parsed;

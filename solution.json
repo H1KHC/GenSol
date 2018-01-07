@@ -10,10 +10,18 @@
 		"type":"compiler",
 		"executableName":"g++",
 		"outputFlag":"-c -o",
-		"compileFlag":[
-			"-std=c++11",
-			"-m32"
-		]
+		"compileFlag":"-std=c++11",
+		"switcher": {
+			"expression":"uname | sed \"s/[^a-zA-Z].*//\"",
+			"case": [
+				{
+					"name":"linux"
+				}, {
+					"default":true,
+					"compileFlag":"-m32"
+				}
+			]
+		}
 	}, {
 		"type":"compiler",
 		"name":"debug",
@@ -36,7 +44,7 @@
 			"-static-libgcc"
 		],
 		"switcher":{
-			"expression":"uname | sed \"s/[_0-9].*//\"",
+			"expression":"uname | sed \"s/[^a-zA-Z].*//\"",
 			"case": [
 				{
 					"name":"mingw",

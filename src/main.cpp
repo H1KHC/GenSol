@@ -10,7 +10,7 @@ namespace po = boost::program_options;
 #ifdef _DEBUG
 #define DEFAULT_TRACING_DEPTH 0
 #else
-#define DEFAULT_TRACING_DEPTH 2
+#define DEFAULT_TRACING_DEPTH 3
 #endif
 int main(int argc, char **argv) {
 	try {
@@ -58,19 +58,22 @@ int main(int argc, char **argv) {
 		solution.setOutput(vm["output"].as<std::string>().c_str());
 		trace.setMaxTracingDepth(vm["maxdepth"].as<int>());
 		if(vm.count("silent")) trace.setOutputLevel(0, 0, 0);
-		else if(vm.count("debug")) {
-			if(vm.count("verbose")) trace.setOutputLevel(1, 1, 1);
-			else trace.setOutputLevel(1, 1, 0);
-		} else trace.setOutputLevel(1, 0, 0);
+		else if(vm.count("verbose")) trace.setOutputLevel(1, 1, 1);
+		else if(vm.count("debug")) trace.setOutputLevel(1, 1, 0);
+		else trace.setOutputLevel(1, 0, 0);
 		solution.execute();
 	} catch (const ERR::ERR &ex) {
-		puts(ex.what());
-		while(!trace.stack.empty())
-			printf("At %s\n", trace.stack.top().c_str()),
+		trace.leadingSpace(trace.depth);
+		fputs(ex.what(), stderr);
+		fputc('\n', stderr);
+		while(!trace.stack.empty()) {
+			trace.leadingSpace(trace.depth);
+			fprintf(stderr, "In %s\n", trace.stack.top().c_str()),
 			trace.pop();
+		}
 		return 1;
 	} catch (const std::exception &ex) {
-		puts(ex.what());
+		fputs(ex.what(), stderr);
 		return 1;
 	}
 	return 0;

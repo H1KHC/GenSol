@@ -1,4 +1,5 @@
 #include "modules/basicModule.h"
+#include "error.h"
 #include <regex>
 
 basicModule::basicModule(const Object* _obj) : parsed(false), accessed(0), obj(_obj) {

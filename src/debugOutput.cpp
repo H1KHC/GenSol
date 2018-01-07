@@ -9,6 +9,6 @@ void printObject(const js::GenericValue<js::UTF8<> >& obj) {
 		js::StringBuffer buffer;
 		js::Writer<js::StringBuffer> writer(buffer);
 		obj.Accept(writer);
-		trace.verbose(ATTR("30")"Object:%s", buffer.GetString());
+		trace.verbose("Object:%s", buffer.GetString());
 	}
 }

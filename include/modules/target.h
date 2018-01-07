@@ -3,6 +3,8 @@
 #include <list>
 #include <map>
 #include "modules/basicModule.h"
+#include "trace.h"
+#include "error.h"
 
 struct Target : public basicModule {
 	bool generated, fileMatched, fileGenerated;

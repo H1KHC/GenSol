@@ -2,7 +2,28 @@
 #include "modules/compiler.h"
 #include "modules/config.h"
 #include "modules/linker.h"
-#define Merge(a,b) ((a).insert((a).end(),(b).begin(),(b).end()))
+
+template<class T>
+inline void dedumplicate(T &a) {
+	for(auto it = a.rbegin(), _end = a.rend(); it != _end; ++it)
+		for(auto n = a.rbegin(); n != it; ++n)
+			if(*n == *it) {
+				a.erase(n);
+				break;
+			}
+}
+
+template <class T>
+inline void Merge(T &a, const T &b) {
+	for(auto &obj : b) {
+		bool conflicted = false;
+		for(auto it = a.begin(), _end = a.end();
+		  !conflicted && it != _end; ++it) {
+			if(obj == *it) conflicted = true;
+		}
+		if(!conflicted) a.push_back(obj);
+	}
+}
 
 void Compiler::merge(const Compiler* compiler) {
 	if(!executableName.size())
@@ -14,7 +35,8 @@ void Compiler::merge(const Compiler* compiler) {
 
 void Config::merge(const Config* config) {
 	Merge(includeDir, config->includeDir);
-	Merge(distDir, config->distDir);
+	if(!distDir.length())
+		distDir = config->distDir;
 	Merge(srcDir, config->srcDir);
 	Merge(srcDirR, config->srcDirR);
 }

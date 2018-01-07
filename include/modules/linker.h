@@ -1,8 +1,10 @@
 #ifndef __LINKER_H__
 #define __LINKER_H__
+#include "modules/basicModule.h"
+#include "trace.h"
+#include "error.h"
 #include <list>
 #include <map>
-#include "modules/basicModule.h"
 
 struct Linker : public basicModule {
 	bool linkFlagMerged;

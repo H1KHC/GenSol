@@ -1,4 +1,4 @@
-#include <algorithm>
+// #include <algorithm>
 #include "modules/task.h"
 #include "trace.h"
 
@@ -117,11 +117,11 @@ void Target::access() {
 	// dependency relationship handled in makefile
 
 	//deduplicate(sourcesR);
-	
+
 	for(auto it = base.begin(), _end = base.end(); it != _end;)
 		if(!targets.exist(*it)) it = base.erase(it);
 		else ++it;
-	
+
 	trace.pop();
 	accessed = 2;
 }
@@ -136,11 +136,13 @@ void Task::access() {
 		ATTR(RESET) "task %s...", name.c_str());
 	parse();
 
+	if (!target.size()) target.push_back(module<Target, Targets, (&targets)>("global"));
+
 	// dependency relationship handled in makefile
 	for(auto it = target.begin(), _end = target.end();
 	  it != _end; ++it)
 		it->locate(), it->ptr->access();
-		
+
 	for(auto it = base.begin(), _end = base.end(); it != _end;)
 		if(!tasks.exist(*it)) it = base.erase(it);
 		else ++it;

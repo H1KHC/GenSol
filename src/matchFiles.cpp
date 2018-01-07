@@ -25,9 +25,8 @@ void Target::matchFiles() {
 					  ATTR(RESET) "in directory %s...",path.string().c_str());
 			if(fs::exists(path / *file)) {
 				trace.log(ATTR(GREEN) "Found!");
-				*file = std::regex_replace((path / *file).string(),
-							std::regex(R"((\w)\\)"), "$1/",
-							std::regex_constants::match_any);
+				*file = (path / *file).generic_string();
+				file->erase(file->begin(), file->begin() + fs::current_path().string().size() + 1);
 				flag = true;
 				break;
 			}
