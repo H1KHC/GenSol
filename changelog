@@ -1,3 +1,15 @@
+2018-01-18 {
+	+ added header install function
+}
+
+2018-01-10 {
+	+ added install function
+}
+
+2018-01-08 {
+	* fixed target dependence problem (#0005)
+}
+
 2018-01-06 {
 	* changed output style
 }

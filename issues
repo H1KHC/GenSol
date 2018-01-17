@@ -2,3 +2,4 @@
 # 0002: If user doesn't indicate flag in module compiler or linker, the program will crash
 # 0003: If the switcher expression has nonprintable characters follow, it won't match anything
 # 0004: If user use "src" to set targets' sources, the dependence analysis will fail due to wrong source path
+# 0005: If target A has a base target B and B is updated, A won't be updated due to missing dependence in makefile

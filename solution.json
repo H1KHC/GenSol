@@ -2,10 +2,11 @@
 	{
 		"type":"config",
 		"includeDir":[
-			"include"
+			"include/"
 		],
-		"srcDir":"src",
-		"distDir":"bin/"
+		"srcDir":"src/",
+		"distDir":"bin/",
+		"installPrefix":"/usr/"
 	}, {
 		"type":"compiler",
 		"executableName":"g++",
@@ -47,7 +48,7 @@
 			"expression":"uname | sed \"s/[^a-zA-Z].*//\"",
 			"case": [
 				{
-					"name":"mingw",
+					"name":["mingw","msys"],
 					"linkFlag": [
 						"-lboost_program_options-mt",
 						"-lboost_system-mt",
@@ -76,13 +77,21 @@
 		"name":"gensol",
 		"srcR": ".*\\.cpp",
 		"compiler":"release",
-		"linker":"release"
+		"linker":"release",
+		"needInstall":true,
+		"installPrefix":"bin/",
+		"headerPrefix":"include/",
+		"installHeaders":["include.h"]
 	}, {
 		"type":"target",
 		"name":"gensold",
 		"srcR": ".*\\.cpp",
 		"compiler":"debug",
-		"linker":"debug"
+		"linker":"debug",
+		"needInstall":true,
+		"installPrefix":"bin/",
+		"headerPrefix":"include/",
+		"installHeaders":["include.h"]
 	}, {
 		"type":"task",
 		"default":true,

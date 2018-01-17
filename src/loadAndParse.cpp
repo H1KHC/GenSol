@@ -1,6 +1,5 @@
 #include <algorithm>
 #include <rapidjson/document.h>
-#include <stdio.h>
 #include "trace.h"
 #include "error.h"
 #include "modules/task.h"
@@ -16,6 +15,128 @@ inline bool matchString(const char *str1, const char *str2) {
 	while(*str1 && *str2)
 		if(tolower(*(str1++)) != tolower(*(str2++))) return false;
 	return *str1 == *str2;
+}
+
+template<class strType>
+inline void exposeStringArrayIntolist(const js::GenericValue<js::UTF8<> >& val,
+							 std::list<strType>& vec);
+
+void evaluateExpression(const Object *obj, char *value) {
+	if(!obj->HasMember("expression"))
+		throw ERR::OBJECT_INVALID("Missing \"expression\"");
+	auto &e = (*obj)["expression"];
+	if(e.GetType() != js::kStringType)
+		throw ERR::OBJECT_TYPE_UNSUPPORTED("Expected String or Array");
+
+	int valuelen;
+	const char *expression = e.GetString();
+
+	FILE *pp = popen(expression, "r");
+	if(!pp)
+		throw ERR::SWITCHER_EXPRESSION_EVALUATE_FAILED(expression);
+	valuelen = fread(value, sizeof(char), 16383, pp);
+	if(valuelen == 0)
+		throw ERR::SWITCHER_EXPRESSION_EVALUATE_FAILED(expression);
+	while(!isprint(value[valuelen - 1])) value[--valuelen] = '\0';
+	pclose(pp);
+}
+
+template <class ModuleType>
+void pushSwitcher(ModuleType *module, const Object *obj) {
+	char *expr = new char[16384];
+	trace.push("Expression",
+		ATTR(GREEN) "Evaluating"
+		ATTR(RESET) " expression");
+	evaluateExpression(obj, expr);
+	trace.pop();
+	trace.verbose("Expression evaluated: %s", expr);
+	trace.push("Case labels",
+		ATTR(GREEN) "Matching"
+		ATTR(RESET) " labels");
+	if(!obj->HasMember("case"))
+		throw ERR::OBJECT_INVALID("Missing \"case\"");
+	auto &c = (*obj)["case"];
+	if(c.GetType() != js::kArrayType)
+		throw ERR::OBJECT_TYPE_UNSUPPORTED(
+			"Expect Array"
+		);
+	if(!c.Size())
+		throw ERR::OBJECT_INVALID("Empty case labels");
+	int defaultTarget = -1, switchTarget = -1, size = c.Size();
+	for(int i = 0; i < size; ++i) {
+		char buf[32];
+		sprintf(buf, "Case label #%d", i);
+		trace.push(buf);
+		if(c[i].GetType() == js::kObjectType) {
+			auto& o = c[i];
+			if(o.HasMember("default")) {
+				if(defaultTarget != -1)
+					throw ERR::SWITCHER_MULTIPLE_DEFAULT_LABEL();
+				defaultTarget = i;
+			} else if(o.HasMember("name")) {
+				std::list<std::string> names;
+				exposeStringArrayIntolist(o["name"], names);
+				for(auto &name : names)
+				if(matchString(name.c_str(), expr)) {
+					if(switchTarget != -1) //multiple matched label
+						throw ERR::SWITCHER_MULTIPLE_MATCHED_LABEL();
+					switchTarget = i;
+				}
+			}
+		} else throw ERR::OBJECT_TYPE_UNSUPPORTED(
+			"Expeted Object"
+		);
+		trace.pop();
+	}
+	if(switchTarget == -1) {
+		if(defaultTarget == -1)
+			throw ERR::SWITCHER_MATCH_FAILED();
+		else {
+			trace.log(ATTR(GREEN) "Matched "
+					ATTR(RESET) "default label");
+			module->loadData(&c[defaultTarget]);
+		}
+	} else {
+		trace.log(ATTR(GREEN) "Matched "
+				ATTR(RESET) "label #%d", switchTarget);
+		module->loadData(&c[switchTarget]);
+	}
+	delete expr;
+	trace.pop();
+}
+
+template <class ModuleType>
+void checkSwitcher(ModuleType *module, const Object *object) {
+	if(object->HasMember("switcher")) {
+		trace.push("Switcher Container",
+			ATTR(GREEN) "Found"
+			ATTR(RESET) " a switcher container!");
+		const Object &obj = (*object)["switcher"];
+		switch(obj.GetType()) {
+			case js::kObjectType: {
+				trace.push("Switcher",
+				  ATTR(GREEN) "Handling"
+				  ATTR(RESET) " switcher...");
+				pushSwitcher(module, &obj);
+				trace.pop();
+			}break;
+			case js::kArrayType:
+				for(int i = 0, sz = obj.Size(); i < sz; ++i) {
+					char temp[16];
+					sprintf(temp, "Switcher #%d", i);
+					trace.push(temp,
+					ATTR(GREEN) "Handling"
+					ATTR(RESET) " switcher #%d...", i);
+					pushSwitcher(module, &obj[i]);
+				}
+				break;
+			default:
+				throw ERR::OBJECT_TYPE_UNSUPPORTED(
+					"Expected Object or Array"
+				);
+		}
+		trace.pop();
+	}
 }
 
 void Solution::load() {
@@ -112,129 +233,13 @@ inline void getString(const js::GenericValue<T>& val, strType& str) {
 	str = val.GetString();
 }
 
-void evaluateExpression(const Object *obj, char *value) {
-	if(!obj->HasMember("expression"))
-		throw ERR::OBJECT_INVALID("Missing \"expression\"");
-	auto &e = (*obj)["expression"];
-	if(e.GetType() != js::kStringType)
-		throw ERR::OBJECT_TYPE_UNSUPPORTED("Expected String or Array");
-
-	int valuelen;
-	const char *expression = e.GetString();
-
-	FILE *pp = popen(expression, "r");
-	if(!pp)
-		throw ERR::SWITCHER_EXPRESSION_EVALUATE_FAILED(expression);
-	valuelen = fread(value, sizeof(char), 16383, pp);
-	if(valuelen == 0)
-		throw ERR::SWITCHER_EXPRESSION_EVALUATE_FAILED(expression);
-	while(!isprint(value[valuelen - 1])) value[--valuelen] = '\0';
-	pclose(pp);
-}
-
-template <class ModuleType>
-void pushSwitcher(ModuleType *module, const Object *obj) {
-	char *expr = new char[16384];
-	trace.push("Expression",
-		ATTR(GREEN) "Evaluating"
-		ATTR(RESET) " expression");
-	evaluateExpression(obj, expr);
-	trace.pop();
-	trace.verbose("Expression evaluated: %s", expr);
-	trace.push("Case labels",
-		ATTR(GREEN) "Matching"
-		ATTR(RESET) " labels");
-	if(!obj->HasMember("case"))
-		throw ERR::OBJECT_INVALID("Missing \"case\"");
-	auto &c = (*obj)["case"];
-	if(c.GetType() != js::kArrayType)
-		throw ERR::OBJECT_TYPE_UNSUPPORTED(
-			"Expect Array"
-		);
-	if(!c.Size())
-		throw ERR::OBJECT_INVALID("Empty case labels");
-	int defaultTarget = -1, switchTarget = -1, size = c.Size();
-	for(int i = 0; i < size; ++i) {
-		char buf[32];
-		sprintf(buf, "Case label #%d", i);
-		trace.push(buf);
-		if(c[i].GetType() == js::kObjectType) {
-			auto& o = c[i];
-			if(o.HasMember("default")) {
-				if(defaultTarget != -1)
-					throw ERR::SWITCHER_MULTIPLE_DEFAULT_LABEL();
-				defaultTarget = i;
-			} else if(o.HasMember("name")) {
-				std::list<std::string> names;
-				exposeStringArrayIntolist(o["name"], names);
-				for(auto &name : names)
-				if(matchString(name.c_str(), expr)) {
-					if(switchTarget != -1) //multiple matched label
-						throw ERR::SWITCHER_MULTIPLE_MATCHED_LABEL();
-					switchTarget = i;
-				}
-			}
-		} else throw ERR::OBJECT_TYPE_UNSUPPORTED(
-			"Expeted Object"
-		);
-		trace.pop();
-	}
-	if(switchTarget == -1) {
-		if(defaultTarget == -1)
-			throw ERR::SWITCHER_MATCH_FAILED();
-		else {
-			trace.log(ATTR(GREEN) "Matched "
-					ATTR(RESET) "default label");
-			module->loadData(&c[defaultTarget]);
-		}
-	} else {
-		trace.log(ATTR(GREEN) "Matched "
-				ATTR(RESET) "label #%d", switchTarget);
-		module->loadData(&c[switchTarget]);
-	}
-	delete expr;
-	trace.pop();
-}
-
-template <class ModuleType, class ObjectType>
-void checkSwitcher(ModuleType *module, ObjectType *object) {
-	if(object->HasMember("switcher")) {
-		trace.push("Switcher Container",
-			ATTR(GREEN) "Found"
-			ATTR(RESET) " a switcher container!");
-		const Object &obj = (*object)["switcher"];
-		switch(obj.GetType()) {
-			case js::kObjectType: {
-				trace.push("Switcher",
-				  ATTR(GREEN) "Handling"
-				  ATTR(RESET) " switcher...");
-				pushSwitcher(module, &obj);
-				trace.pop();
-			}break;
-			case js::kArrayType:
-				for(int i = 0, sz = obj.Size(); i < sz; ++i) {
-					char temp[16];
-					sprintf(temp, "Switcher #%d", i);
-					trace.push(temp,
-					ATTR(GREEN) "Handling"
-					ATTR(RESET) " switcher #%d...", i);
-					pushSwitcher(module, &obj[i]);
-				}
-				break;
-			default:
-				throw ERR::OBJECT_TYPE_UNSUPPORTED(
-					"Expected Object or Array"
-				);
-		}
-		trace.pop();
-	}
-}
-
 void Config::loadData(const Object *obj) {
 	if(obj->HasMember("includeDir"))
 		exposeStringArrayIntolist((*obj)["includeDir"], includeDir);
 	if(obj->HasMember("distDir"))
 		getString((*obj)["distDir"], distDir);
+	if(obj->HasMember("installPrefix"))
+		getString((*obj)["installPrefix"], installPrefix);
 	if(obj->HasMember("srcDir"))
 		exposeStringArrayIntolist((*obj)["srcDir"], srcDir);
 	if(obj->HasMember("srcDirR"))
@@ -303,18 +308,22 @@ void Target::loadData(const Object *obj) {
 		exposeStringArrayIntolist((*obj)["src"], sources);
 	if(obj->HasMember("srcR"))
 		exposeStringArrayIntolist((*obj)["srcR"], sourcesR);
+	if(obj->HasMember("installHeaders"))
+		exposeStringArrayIntolist((*obj)["installHeaders"], installHeaders);
+	if(obj->HasMember("installHeadersR"))
+		exposeStringArrayIntolist((*obj)["installHeadersR"], installHeadersR);
+	if(obj->HasMember("installPrefix"))
+		getString((*obj)["installPrefix"], installPrefix);
+	if(obj->HasMember("headerPrefix"))
+		getString((*obj)["headerPrefix"], headerPrefix);
 	if(obj->HasMember("config"))
 		exposeStringArrayIntolist((*obj)["config"], config.base);
-	else if(config.base.empty())
-		config.base.push_back("global");
 	if(obj->HasMember("compiler"))
 		exposeStringArrayIntolist((*obj)["compiler"], compiler.base);
-	else if(compiler.base.empty())
-		compiler.base.push_back("global");
 	if(obj->HasMember("linker"))
 		exposeStringArrayIntolist((*obj)["linker"], linker.base);
-	else if(linker.base.empty())
-		linker.base.push_back("global");
+	if(obj->HasMember("needInstall"))
+		needInstall = true;
 }
 
 void Target::parse() {

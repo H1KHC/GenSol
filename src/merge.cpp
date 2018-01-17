@@ -37,6 +37,8 @@ void Config::merge(const Config* config) {
 	Merge(includeDir, config->includeDir);
 	if(!distDir.length())
 		distDir = config->distDir;
+	if(!installPrefix.length())
+		installPrefix = config->installPrefix;
 	Merge(srcDir, config->srcDir);
 	Merge(srcDirR, config->srcDirR);
 }

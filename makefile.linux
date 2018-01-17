@@ -14,11 +14,11 @@ task_release: directories bin/gensol
 # Targets:
 bin/gensol: .build/src/access.cpp.gensol.o .build/src/debugOutput.cpp.gensol.o .build/src/generate.cpp.gensol.o .build/src/globalVariables.cpp.gensol.o .build/src/help.cpp.gensol.o .build/src/init.cpp.gensol.o .build/src/loadAndParse.cpp.gensol.o .build/src/main.cpp.gensol.o .build/src/matchFiles.cpp.gensol.o .build/src/merge.cpp.gensol.o .build/src/solution.cpp.gensol.o
 	@g++ -o $@ $^ -std=c++11 -static-libgcc -lboost_program_options -lboost_system -lboost_filesystem
-	@echo "[ 100% ]Target gensol has been built!"
+	@echo "[ 100% ] Target gensol has been built!"
 
 bin/gensold: .build/src/access.cpp.gensold.o .build/src/debugOutput.cpp.gensold.o .build/src/generate.cpp.gensold.o .build/src/globalVariables.cpp.gensold.o .build/src/help.cpp.gensold.o .build/src/init.cpp.gensold.o .build/src/loadAndParse.cpp.gensold.o .build/src/main.cpp.gensold.o .build/src/matchFiles.cpp.gensold.o .build/src/merge.cpp.gensold.o .build/src/solution.cpp.gensold.o
 	@g++ -o $@ $^ -std=c++11 -static-libgcc -lboost_program_options -lboost_system -lboost_filesystem
-	@echo "[ 100% ]Target gensold has been built!"
+	@echo "[ 100% ] Target gensold has been built!"
 
 # Sources:
 .build/src/access.cpp.gensol.o: src/access.cpp include/modules/task.h include/modules/compiler.h include/modules/basicModule.h include/error.h include/trace.h include/modules/config.h include/modules/linker.h include/modules/target.h
@@ -123,3 +123,9 @@ distclean:
 clean:
 	@rm -rf .build/ .build/src bin/ bin/gensol bin/gensold
 	@echo "Cleaned!"
+
+install: bin/gensol bin/gensold
+	@echo Installing...
+	@cp "bin/gensol" "/usr/bin/"
+	@cp "bin/gensold" "/usr/bin/"
+	@echo Install successfully!

@@ -9,7 +9,7 @@
 struct Config : public basicModule {
 	bool includeCommandGenerated;
 	std::list<std::string> includeDir, srcDir, srcDirR;
-	std::string distDir, includeCommand;
+	std::string distDir, installPrefix, includeCommand;
 	void merge(const Config*);
 	void access();
 	void parse();

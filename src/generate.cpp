@@ -8,11 +8,34 @@ namespace fs = boost::filesystem;
 
 static std::set<std::string> directories;
 
+void generateInstall(Solution* sol) {
+	out <<"# install tasks\n.PHONY:";
+	for(auto& target : targets)
+		if(target.second->needInstall)
+			out <<" install_" <<target.second->name.c_str();
+	out <<"\n";
+	for(auto& target : targets)
+		if(target.second->needInstall) {
+			out <<"\ninstall_" <<target.second->name.c_str() <<": "
+					<<target.second->config.distDir.c_str() <<target.second->name.c_str() <<"\n";
+			out <<"\t@echo \"Installing " <<target.second->name.c_str() <<"...\"\n"
+				<<"\t@cp \"" <<target.second->config.distDir.c_str() <<target.second->name.c_str() <<"\" \""
+						   <<target.second->config.installPrefix.c_str() <<target.second->installPrefix.c_str() <<"\"\n";
+			if(target.second->needInstall) {
+				for(auto file : target.second->installHeaders)
+					out <<"\t@cp \""<<file.c_str() <<"\" \""<<target.second->config.installPrefix.c_str()
+															<<target.second->headerPrefix.c_str() <<"\"\n";
+			}
+			out <<"\t@echo \"Done!\"\n";
+		}
+}
+
 void Solution::generate() {
 	if(!outputFile.length()) outputFile = "makefile";
 	out.init(outputFile.c_str());
 	trace.push("Solution generate",
 		ATTR(GREEN) "\nGenerating " ATTR(RESET) "makefile...");
+
 	out <<".PHONY: all clean directories distclean";
 	for(auto &task : tasks)
 		out <<" task_" <<task.second->name.c_str();
@@ -59,7 +82,13 @@ void Solution::generate() {
 	for(auto& target : targets)
 		out <<" "<<target.second->config.distDir.c_str()
 			<<target.first.c_str();
-	out <<"\n\t@echo \"Cleaned!\"\n";
+	out <<"\n\t@echo \"Cleaned!\"\n\n";
+
+	for(auto& target : targets)
+		if(target.second->needInstall) {
+			generateInstall(this);
+			break;
+		}
 
 	trace.pop();
 	trace.log(ATTR(GREEN) "Done!" ATTR(RESET));
@@ -93,9 +122,14 @@ void Target::generate() {
 		sourcesR.push_back(".*\\.c");
 	matchFiles();
 	out <<config.distDir.c_str() <<name.c_str() <<":";
+	for(auto &baseTarget : base)
+		out <<" " <<config.distDir.c_str() <<baseTarget.c_str();
 	for(auto& src : sources)
 		out <<" .build/" << compiler.objectFileName(src).c_str();
-	out <<"\n\t@" <<linker.command("$^", "$@").c_str() <<"\n"
+	out <<"\n"
+		"\t@echo \"[ "<<OUT::Format("%3d", (100 * sources.size()) / (sources.size() + 1)) <<"% ]"
+						" Linking target "<<name.c_str() <<"... \"\n"
+		"\t@" <<linker.command("$^", "$@").c_str() <<"\n"
 		"\t@echo \"[ 100% ] Target " <<name.c_str() <<" has been built!\"\n\n";
 	generated = true;
 	trace.pop();
@@ -110,7 +144,7 @@ void format(char *buf) {
 
 void Target::generateSources() {
 	static char buf[16384];
-	int sourceCount = sources.size(), now = 0;
+	int sourceCount = sources.size() + 1, now = 0;
 	if(fileGenerated) return;
 	trace.push("Sources of " + name,
 		ATTR(GREEN) "Generating "

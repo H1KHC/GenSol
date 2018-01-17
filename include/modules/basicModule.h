@@ -5,7 +5,7 @@
 #include <string>
 
 namespace js = rapidjson;
-typedef js::GenericValue< js::UTF8<> > Object;
+typedef rapidjson::GenericValue<rapidjson::UTF8<char>, rapidjson::MemoryPoolAllocator<rapidjson::CrtAllocator> > Object;
 
 struct basicModule {
 	bool parsed;

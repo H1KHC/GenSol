@@ -7,8 +7,10 @@
 #include "error.h"
 
 struct Target : public basicModule {
-	bool generated, fileMatched, fileGenerated;
-	std::list<std::string> sources, sourcesR;
+	bool generated, fileMatched, fileGenerated, needInstall;
+	std::list<std::string> sources, sourcesR,
+						   installHeaders, installHeadersR;
+	std::string installPrefix, headerPrefix;
 	Config config;
 	Compiler compiler;
 	Linker linker;

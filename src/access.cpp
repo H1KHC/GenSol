@@ -65,6 +65,10 @@ void Config::access() {
 	if(ch != '/' && ch != '\\') {
 		distDir.append("/");
 	}
+	ch = installPrefix[installPrefix.length() - 1];
+	if(ch != '/' && ch != '\\') {
+		installPrefix.append("/");
+	}
 	//deduplicate(srcDir);
 	checkArraySuffixSlash(srcDir);
 	trace.pop();
@@ -108,6 +112,13 @@ void Target::access() {
 		ATTR(GREEN) "Checking "
 		ATTR(RESET) "target %s...", name.c_str());
 	parse();
+
+	if(config.base.empty())
+		config.base.push_back("global");
+	if(compiler.base.empty())
+		compiler.base.push_back("global");
+	if(linker.base.empty())
+		linker.base.push_back("global");
 
 	config.access();
 	compiler.access();
